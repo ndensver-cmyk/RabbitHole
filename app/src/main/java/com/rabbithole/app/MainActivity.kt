@@ -217,7 +217,7 @@ class MainActivity:ComponentActivity(){
    Text("FUENTE: ${item.source.uppercase()}",Modifier.padding(top=12.dp),fontSize=9.sp,color=Muted,letterSpacing=1.sp)
    if(item.url.isNotBlank()) Text("ABRIR FUENTE EXTERNA  ↗",Modifier.padding(top=8.dp).clip(RoundedCornerShape(3.dp)).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{runCatching{uriHandler.openUri(item.url)}}.padding(horizontal=12.dp,vertical=9.dp),fontSize=9.sp,color=Ink,fontWeight=FontWeight.Bold,letterSpacing=.7.sp)
    Text(if(saved)"GUARDADO  ✓" else "GUARDAR DESCUBRIMIENTO  +",Modifier.padding(top=16.dp).clip(RoundedCornerShape(3.dp)).background(Ink).clickable{onSave()}.padding(horizontal=14.dp,vertical=10.dp),fontSize=9.sp,color=Color.White,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
-   Text("SIGUE EL HILO",Modifier.padding(top=24.dp,bottom=10.dp),fontSize=9.sp,color=Muted,letterSpacing=1.7.sp,fontWeight=FontWeight.Bold)
+   Text(if(item.source=="RabbitHole")"SIGUE EL HILO" else "MÁS RESULTADOS DE ESTA BÚSQUEDA",Modifier.padding(top=24.dp,bottom=10.dp),fontSize=9.sp,color=Muted,letterSpacing=1.7.sp,fontWeight=FontWeight.Bold)
   }
   LazyColumn(contentPadding=PaddingValues(horizontal=22.dp,vertical=2.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){items(item.connections){connection->Row(Modifier.fillMaxWidth().background(Color.White,RoundedCornerShape(3.dp)).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{onConnection(connection)}.padding(14.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(7.dp).background(Ink,CircleShape));Spacer(Modifier.width(12.dp));Text(connection,Modifier.weight(1f),fontSize=12.sp,fontWeight=FontWeight.Medium);Text("↗",fontSize=16.sp,color=Muted)}}}
  }
