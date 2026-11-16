@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rabbit hole.app".replace(" ", "")
+    namespace = "com.rabbithole.app"
     compileSdk = 35
 
     defaultConfig {
