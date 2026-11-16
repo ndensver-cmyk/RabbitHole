@@ -184,5 +184,5 @@ suspend fun searchOpenSources(query: String): List<Discovery> {
         item.copy(connections = related)
     }
     sourceCache[key] = System.currentTimeMillis() to enriched
-    enriched
+    return enriched
 }
