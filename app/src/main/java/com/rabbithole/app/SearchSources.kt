@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private val sourceCache = ConcurrentHashMap<String, Pair<Long, List<Discovery>>>()
 @Volatile private var lastMusicBrainzRequest = 0L
+private val musicBrainzLock = Any()
 
 private fun enc(value: String) = URLEncoder.encode(value, "UTF-8")
 
@@ -85,12 +86,11 @@ private suspend fun archive(q: String): List<Discovery> = withContext(Dispatcher
 }
 
 private suspend fun musicBrainz(q: String): List<Discovery> = withContext(Dispatchers.IO) {
-    val wait = synchronized(this@withContext) {
+    val scheduledAt = synchronized(musicBrainzLock) {
         val now = System.currentTimeMillis()
-        val delayMs = (1100L - (now - lastMusicBrainzRequest)).coerceAtLeast(0L)
-        lastMusicBrainzRequest = now + delayMs
-        delayMs
+        maxOf(now, lastMusicBrainzRequest + 1100L).also { lastMusicBrainzRequest = it }
     }
+    val wait = scheduledAt - System.currentTimeMillis()
     if (wait > 0) Thread.sleep(wait)
     val json = requestJson("https://musicbrainz.org/ws/2/artist/?query=${enc(q)}&fmt=json&limit=5")
     val artists = json.optJSONArray("artists") ?: return@withContext emptyList()
