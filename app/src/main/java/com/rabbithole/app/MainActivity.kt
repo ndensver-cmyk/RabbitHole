@@ -30,6 +30,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalUriHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -41,7 +45,7 @@ private val Paper = Color(0xFFF5F5F3)
 private val Muted = Color(0xFF777777)
 private val Rule = Color(0xFFE3E3E1)
 
-data class Discovery(val title:String,val type:String,val category:String,val description:String,val connections:List<String>)
+data class Discovery(val title:String,val type:String,val category:String,val description:String,val connections:List<String>,val source:String="RabbitHole",val url:String="")
 private val catalog = listOf(
  Discovery("Nirvana","ARTISTA","Música","La banda que llevó el sonido de Seattle a una generación entera.",listOf("Nevermind","In Utero","Seattle","Grunge","Punk rock")),
  Discovery("Nevermind","ÁLBUM","Música","El álbum de 1991 que cambió el lugar del rock alternativo en la cultura popular.",listOf("Nirvana","Butch Vig","Grunge","MTV Unplugged")),
@@ -76,7 +80,20 @@ class MainActivity:ComponentActivity(){
  var selected by remember{mutableStateOf<Discovery?>(null)}
  var saved by remember{mutableStateOf(setOf<String>())}
  var history by remember{mutableStateOf(listOf<String>())}
- val matches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}
+ var onlineResults by remember{mutableStateOf(emptyList<Discovery>())}
+ var searching by remember{mutableStateOf(false)}
+ LaunchedEffect(query) {
+  if(query.trim().length<2){onlineResults=emptyList();searching=false}
+  else {
+   delay(650)
+   searching=true
+   onlineResults=withContext(Dispatchers.IO){searchOpenSources(query)}
+   searching=false
+  }
+ }
+ val localMatches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}
+ val matches=(localMatches+onlineResults).distinctBy{"${it.source}:${it.title.lowercase()}"}
+ val searchStatus=when{query.isBlank()->"Biblioteca inicial + fuentes abiertas";searching->"Consultando 10 fuentes gratuitas…";else->"${onlineResults.size} hallazgos externos · ${localMatches.size} locales"}
  MaterialTheme(colorScheme=lightColorScheme(primary=Ink,onPrimary=Color.White,background=Paper,surface=Color.White,onSurface=Ink)){
   Column(Modifier.fillMaxSize().background(Paper)){
    Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=15.dp),verticalAlignment=Alignment.CenterVertically){
@@ -86,11 +103,11 @@ class MainActivity:ComponentActivity(){
    }
    AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={fadeIn() togetherWith fadeOut()},label="screen"){page->
     when(page){
-     "Inicio"->Home(query,{query=it},category,{category=it},matches,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
+     "Inicio"->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
      "Universo"->MapScreen{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)}
      "Guardados"->LibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
      "Recorrido"->LibraryScreen("Tu recorrido","Vuelve a los temas que ya exploraste.",history.mapNotNull{t->catalog.find{it.title==t}},saved,{selected=it},{t->saved=if(t in saved)saved-t else saved+t})
-     else->Home(query,{query=it},category,{category=it},matches,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
+     else->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
     }
    }
    if(selected==null) Navigation(tab){tab=it}
@@ -102,7 +119,7 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable private fun Home(query:String,onQuery:(String)->Unit,category:String,onCategory:(String)->Unit,results:List<Discovery>,saved:Set<String>,onSave:(String)->Unit,onOpen:(Discovery)->Unit,onMap:()->Unit){
+@Composable private fun Home(query:String,onQuery:(String)->Unit,category:String,onCategory:(String)->Unit,results:List<Discovery>,searchStatus:String,saved:Set<String>,onSave:(String)->Unit,onOpen:(Discovery)->Unit,onMap:()->Unit){
  LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(bottom=20.dp)){
   item{
    Column(Modifier.padding(start=22.dp,end=22.dp,top=23.dp)){
@@ -126,6 +143,7 @@ class MainActivity:ComponentActivity(){
      };UniverseGlyph(Modifier.size(94.dp))
     }
     Row(Modifier.padding(top=25.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically){Text(if(query.isBlank())"PUNTOS DE PARTIDA" else "RESULTADOS",fontSize=9.sp,color=Muted,letterSpacing=1.6.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Text("${results.size} RUTAS",fontSize=8.sp,color=Muted)}
+    Text(searchStatus,Modifier.padding(bottom=10.dp),fontSize=9.sp,color=Muted)
     Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
      listOf("Todo","Música","Cine","Historia","Ciencia").forEach{c->val active=c==category;Text(c.uppercase(),Modifier.background(if(active)Ink else Color.White,RoundedCornerShape(3.dp)).border(1.dp,if(active)Ink else Rule,RoundedCornerShape(3.dp)).clickable{onCategory(c)}.padding(horizontal=11.dp,vertical=8.dp),fontSize=9.sp,color=if(active)Color.White else Ink,letterSpacing=.5.sp)}
     }
@@ -173,12 +191,13 @@ class MainActivity:ComponentActivity(){
  Row(modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(Color.White).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{onOpen()}.padding(13.dp),verticalAlignment=Alignment.CenterVertically){
   Box(Modifier.size(38.dp).background(Paper,RoundedCornerShape(3.dp)),contentAlignment=Alignment.Center){Portal(Modifier.size(23.dp))}
   Spacer(Modifier.width(11.dp))
-  Column(Modifier.weight(1f)){Text(item.type,fontSize=8.sp,color=Muted,letterSpacing=1.3.sp,fontWeight=FontWeight.Bold);Text(item.title,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(item.description,fontSize=10.sp,color=Muted,maxLines=2,lineHeight=14.sp)}
+  Column(Modifier.weight(1f)){Text("${item.source.uppercase()}  ·  ${item.type}",fontSize=8.sp,color=Muted,letterSpacing=.7.sp,fontWeight=FontWeight.Bold);Text(item.title,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text(item.description,fontSize=10.sp,color=Muted,maxLines=2,lineHeight=14.sp)}
   Text(if(isSaved)"●" else "＋",Modifier.clickable{onSave()}.padding(start=10.dp),fontSize=17.sp,color=if(isSaved)Ink else Muted)
  }
 }
 
 @Composable private fun Detail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Unit,onConnection:(String)->Unit){
+ val uriHandler=LocalUriHandler.current
  Column(Modifier.fillMaxSize().background(Paper)){
   Row(Modifier.fillMaxWidth().padding(20.dp),verticalAlignment=Alignment.CenterVertically){Text("←  VOLVER",Modifier.clickable{onBack()},fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=1.sp);Spacer(Modifier.weight(1f));Text("RABBIT HOLE / DISCOVERY",fontSize=8.sp,color=Muted)}
   Column(Modifier.padding(horizontal=22.dp)){
@@ -186,6 +205,8 @@ class MainActivity:ComponentActivity(){
    Text("YOU FOUND A RABBIT HOLE",Modifier.padding(top=20.dp),fontSize=9.sp,color=Muted,letterSpacing=1.6.sp)
    Text(item.title,Modifier.padding(top=5.dp),fontSize=34.sp,lineHeight=37.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.4).sp)
    Text(item.description,Modifier.padding(top=9.dp),fontSize=13.sp,lineHeight=20.sp,color=Muted)
+   Text("FUENTE: ${item.source.uppercase()}",Modifier.padding(top=12.dp),fontSize=9.sp,color=Muted,letterSpacing=1.sp)
+   if(item.url.isNotBlank()) Text("ABRIR FUENTE EXTERNA  ↗",Modifier.padding(top=8.dp).clip(RoundedCornerShape(3.dp)).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{runCatching{uriHandler.openUri(item.url)}}.padding(horizontal=12.dp,vertical=9.dp),fontSize=9.sp,color=Ink,fontWeight=FontWeight.Bold,letterSpacing=.7.sp)
    Text(if(saved)"GUARDADO  ✓" else "GUARDAR DESCUBRIMIENTO  +",Modifier.padding(top=16.dp).clip(RoundedCornerShape(3.dp)).background(Ink).clickable{onSave()}.padding(horizontal=14.dp,vertical=10.dp),fontSize=9.sp,color=Color.White,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
    Text("SIGUE EL HILO",Modifier.padding(top=24.dp,bottom=10.dp),fontSize=9.sp,color=Muted,letterSpacing=1.7.sp,fontWeight=FontWeight.Bold)
   }
