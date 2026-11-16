@@ -179,6 +179,10 @@ suspend fun searchOpenSources(query: String): List<Discovery> {
     val found = coroutineScope {
         sources.map { source -> async(Dispatchers.IO) { try { source() } catch (_: Exception) { emptyList() } } }.awaitAll().flatten()
     }.distinctBy { "${it.source}:${it.title.lowercase()}" }
-    sourceCache[key] = System.currentTimeMillis() to found
-    found
+    val enriched = found.map { item ->
+        val related = found.asSequence().filter { it.title != item.title }.take(5).map { it.title }.toList()
+        item.copy(connections = related)
+    }
+    sourceCache[key] = System.currentTimeMillis() to enriched
+    enriched
 }
