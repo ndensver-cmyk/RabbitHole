@@ -1,6 +1,7 @@
 package com.rabbithole.app
 
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
@@ -113,13 +114,14 @@ class MainActivity:ComponentActivity(){
    if(selected==null) Navigation(tab){tab=it}
   }
   selected?.let{item->Detail(item,item.title in saved,{selected=null},{saved=if(item.title in saved)saved-item.title else saved+item.title}){connection->
-   selected=catalog.find{it.title.equals(connection,true)}?:Discovery(connection,"NUEVA RUTA","Todo","Una conexión para continuar tu exploración.",listOf("Contexto","Referencias","Ideas relacionadas"))
+   selected=catalog.find{it.title.equals(connection,true)}?:onlineResults.find{it.title.equals(connection,true)}?:Discovery(connection,"NUEVA RUTA","Todo","Una conexión para continuar tu exploración.",listOf("Contexto","Referencias","Ideas relacionadas"))
    history=(listOf(connection)+history).distinct().take(40)
   }}
  }
 }
 
 @Composable private fun Home(query:String,onQuery:(String)->Unit,category:String,onCategory:(String)->Unit,results:List<Discovery>,searchStatus:String,saved:Set<String>,onSave:(String)->Unit,onOpen:(Discovery)->Unit,onMap:()->Unit){
+ val uriHandler=LocalUriHandler.current
  LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(bottom=20.dp)){
   item{
    Column(Modifier.padding(start=22.dp,end=22.dp,top=23.dp)){
@@ -144,6 +146,13 @@ class MainActivity:ComponentActivity(){
     }
     Row(Modifier.padding(top=25.dp,bottom=10.dp),verticalAlignment=Alignment.CenterVertically){Text(if(query.isBlank())"PUNTOS DE PARTIDA" else "RESULTADOS",fontSize=9.sp,color=Muted,letterSpacing=1.6.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Text("${results.size} RUTAS",fontSize=8.sp,color=Muted)}
     Text(searchStatus,Modifier.padding(bottom=10.dp),fontSize=9.sp,color=Muted)
+    if(query.trim().length>=2){
+     Text("AMPLIAR BÚSQUEDA EN LA WEB",Modifier.padding(bottom=7.dp),fontSize=8.sp,color=Muted,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold)
+     Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
+      listOf("DuckDuckGo" to "https://duckduckgo.com/?q=${Uri.encode(query)}","Google" to "https://www.google.com/search?q=${Uri.encode(query)}","Bing" to "https://www.bing.com/search?q=${Uri.encode(query)}","Brave" to "https://search.brave.com/search?q=${Uri.encode(query)}","Qwant" to "https://www.qwant.com/?q=${Uri.encode(query)}","Mojeek" to "https://www.mojeek.com/search?q=${Uri.encode(query)}").forEach{(name,url)->Text(name,Modifier.border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{runCatching{uriHandler.openUri(url)}}.padding(horizontal=10.dp,vertical=8.dp),fontSize=9.sp,color=Ink)}
+     }
+     Spacer(Modifier.height(12.dp))
+    }
     Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(6.dp)){
      listOf("Todo","Música","Cine","Historia","Ciencia").forEach{c->val active=c==category;Text(c.uppercase(),Modifier.background(if(active)Ink else Color.White,RoundedCornerShape(3.dp)).border(1.dp,if(active)Ink else Rule,RoundedCornerShape(3.dp)).clickable{onCategory(c)}.padding(horizontal=11.dp,vertical=8.dp),fontSize=9.sp,color=if(active)Color.White else Ink,letterSpacing=.5.sp)}
     }
