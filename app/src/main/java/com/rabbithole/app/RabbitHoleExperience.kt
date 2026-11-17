@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
+import coil.request.ImageRequest
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -51,27 +53,37 @@ private fun posterFor(item:Discovery)=item.imageUrl
  Canvas(modifier){val d=size.minDimension;val c=Offset(size.width/2,size.height/2);drawCircle(color.copy(alpha=.25f),d*.47f,c,style=Stroke(1.dp.toPx()));drawCircle(color.copy(alpha=.48f),d*.31f,c,style=Stroke(1.dp.toPx()));drawCircle(color.copy(alpha=.8f),d*.11f*pulse,c);val a=Math.toRadians(angle.toDouble());val p=Offset(c.x+kotlin.math.cos(a).toFloat()*d*.42f,c.y+kotlin.math.sin(a).toFloat()*d*.42f);drawLine(color.copy(alpha=.55f),c,p,1.dp.toPx());drawCircle(color,d*.035f,p)}
 }
 @Composable private fun Photo(item:Discovery,modifier:Modifier=Modifier){
+ val context=LocalContext.current
  var image by remember(item.title){mutableStateOf(posterFor(item))}
  var failed by remember(item.title){mutableStateOf(false)}
  var retried by remember(item.title){mutableStateOf(false)}
- LaunchedEffect(item.title){if(image.isBlank())image=loadCommonsImage(item.title)}
+ LaunchedEffect(item.title){
+  if(image.isBlank())image=loadCommonsImage(item.title+" "+item.type)
+ }
  LaunchedEffect(failed){
   if(failed&&!retried){
    retried=true
-   val alternative=loadCommonsImage(item.title+" photograph")
+   val alternative=loadCommonsImage(item.title+" "+item.category+" photograph")
    if(alternative.isNotBlank()&&alternative!=image){image=alternative;failed=false}
   }
  }
- Box(modifier.clip(RoundedCornerShape(5.dp)).background(Brush.linearGradient(listOf(Color(0xFF3A3935),XBlack)))){
+ Box(modifier.clip(RoundedCornerShape(3.dp)).background(Brush.linearGradient(listOf(Color(0xFF494640),XBlack)))){
   if(image.isNotBlank()&&!failed){
-   AsyncImage(model=image,contentDescription="Imagen de "+item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.20f)}),onError={failed=true})
+   AsyncImage(
+    model=ImageRequest.Builder(context).data(image).crossfade(true).allowHardware(false).build(),
+    contentDescription="Imagen de "+item.title,
+    modifier=Modifier.fillMaxSize(),
+    contentScale=ContentScale.Crop,
+    onError={failed=true}
+   )
   }else{
-   Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF494741),XBlack)))){
-    OrbitMark(Modifier.align(Alignment.Center).fillMaxSize(.62f))
-    Text(item.title.uppercase(),Modifier.align(Alignment.BottomStart).padding(12.dp),color=Color.White.copy(alpha=.72f),fontSize=10.sp,lineHeight=12.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp,maxLines=2)
+   Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF494640),Color(0xFF201F1C),XBlack)))){
+    OrbitMark(Modifier.align(Alignment.Center).fillMaxSize(.62f),Color.White.copy(alpha=.82f))
+    Text(item.title.uppercase(),Modifier.align(Alignment.BottomStart).padding(12.dp),color=Color.White.copy(alpha=.82f),fontSize=12.sp,lineHeight=14.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp,maxLines=3)
+    Text(if(failed)"IMAGEN NO DISPONIBLE" else "BUSCANDO IMAGEN",Modifier.align(Alignment.TopStart).padding(11.dp),color=Color.White.copy(alpha=.65f),fontSize=7.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
    }
   }
-  Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xDD000000)))))
+  Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x16000000),Color.Transparent,Color(0xBB000000)))))
  }
 }
 @Composable
@@ -139,9 +151,16 @@ fun ExperienceHome(query:String,onQuery:(String)->Unit,category:String,onCategor
  }
 }
 @Composable private fun PosterCard(item:Discovery,saved:Boolean,onOpen:()->Unit,onSave:()->Unit,modifier:Modifier,tall:Boolean){
- Column(modifier.clip(RoundedCornerShape(17.dp)).background(XWhite).clickable{onOpen()}){
-  Box(Modifier.fillMaxWidth().height(if(tall)245.dp else 184.dp)){Photo(item,Modifier.fillMaxSize());Text(item.type,Modifier.align(Alignment.TopStart).padding(9.dp).clip(CircleShape).background(Color(0xAA080808)).padding(horizontal=9.dp,vertical=6.dp),color=XWhite,fontSize=7.sp);Text(if(saved)"♥" else "＋",Modifier.align(Alignment.TopEnd).padding(8.dp).clip(CircleShape).background(Color(0xAA080808)).clickable{onSave()}.padding(horizontal=9.dp,vertical=5.dp),color=XWhite,fontSize=14.sp)}
-  Column(Modifier.padding(11.dp)){Tag(item.source);Text(item.title,color=XBlack,fontSize=15.sp,lineHeight=18.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp),maxLines=2);Text(item.description,color=Color(0xFF45423D),fontSize=11.sp,lineHeight=17.sp,maxLines=6,modifier=Modifier.padding(top=8.dp));Row(Modifier.padding(top=10.dp),verticalAlignment=Alignment.CenterVertically){Text("SEGUIR DESCUBRIENDO",color=XBlack,fontSize=7.sp,fontWeight=FontWeight.Black);Spacer(Modifier.weight(1f));Text("↗",color=XBlack,fontSize=14.sp)}}
+ Box(modifier.fillMaxWidth().height(if(tall)340.dp else 285.dp).clip(RoundedCornerShape(2.dp)).background(XBlack).clickable{onOpen()}){
+  Photo(item,Modifier.fillMaxSize())
+  Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color(0x08000000),Color(0xE8000000)))))
+  Text(item.type.uppercase(),Modifier.align(Alignment.TopStart).padding(14.dp),color=XWhite,fontSize=8.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black)
+  Text(if(saved)"♥" else "＋",Modifier.align(Alignment.TopEnd).padding(12.dp).clickable{onSave()},color=XWhite,fontSize=19.sp)
+  Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal=17.dp,vertical=19.dp)){
+   Box(Modifier.width(35.dp).height(2.dp).background(XWhite))
+   Text(item.title.uppercase(),color=XWhite,fontSize=if(item.title.length>17)25.sp else 31.sp,lineHeight=if(item.title.length>17)27.sp else 32.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=11.dp))
+   Text("RABBITHOLE  /  DESCUBRIR  ↗",color=Color.White.copy(alpha=.82f),fontSize=7.sp,letterSpacing=1.1.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=12.dp))
+  }
  }
 }
 @Composable
