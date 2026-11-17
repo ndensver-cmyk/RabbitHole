@@ -26,16 +26,40 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build debug APK
-        run: gradle assembleDebug
+      - name: Build clean debug APK
+        run: gradle clean assembleDebug
 
-      - name: Publish APK release
+      - name: Verify APK integrity, signature and package metadata
+        shell: bash
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          unzip -t "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n 1)"
+          test -n "$APKSIGNER"
+          test -n "$AAPT"
+          "$APKSIGNER" verify --verbose "$APK"
+          "$AAPT" dump badging "$APK" | tee apk-metadata.txt
+          grep -q "package: name='com.rabbithole.app' versionCode='25' versionName='1.0.25'" apk-metadata.txt
+          sha256sum "$APK"
+
+      - name: Prepare named APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk RabbitHole-1.0.25.apk
+
+      - name: Upload verified APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RabbitHole-1.0.25-verified
+          path: RabbitHole-1.0.25.apk
+          if-no-files-found: error
+
+      - name: Publish verified APK release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="v1.0-${GITHUB_RUN_NUMBER}"
-          gh release create "$VERSION" app/build/outputs/apk/debug/app-debug.apk \
+          VERSION="v1.0-25"
+          gh release create "$VERSION" RabbitHole-1.0.25.apk \
             --repo "$GITHUB_REPOSITORY" \
-            --title "RabbitHole $VERSION" \
-            --notes "Primera compilación instalable de RabbitHole." || \
-          gh release upload "$VERSION" app/build/outputs/apk/debug/app-debug.apk --repo "$GITHUB_REPOSITORY" --clobber
+            --title "RabbitHole 1.0.25 (APK verificado)" \
+            --notes "APK compilado desde cero y verificado con ZIP integrity, apksigner y AAPT."
