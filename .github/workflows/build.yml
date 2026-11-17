@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RabbitHole-5.1.0-verified
-          path: RabbitHole-5.0.34.apk
+          path: RabbitHole-5.1.0.apk
           if-no-files-found: error
 
       - name: Publish verified APK release
@@ -66,5 +66,5 @@ jobs:
               --title "RabbitHole 5.1.0" \
               --notes "Rediseño híbrido inmersivo, animaciones y contenido editorial ampliado. APK verificado con ZIP integrity, apksigner y AAPT."
           fi
-          gh release upload "$VERSION" RabbitHole-5.0.34.apk \
+          gh release upload "$VERSION" RabbitHole-5.1.0.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
