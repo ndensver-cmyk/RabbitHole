@@ -9,6 +9,16 @@ import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 
 private val imageCache = ConcurrentHashMap<String, String>()
+private val imageAliases = mapOf(
+    "nirvana" to "Nirvana band",
+    "nevermind" to "Nevermind Nirvana album cover",
+    "in utero" to "In Utero Nirvana album",
+    "the dark side of the moon" to "The Dark Side of the Moon Pink Floyd album",
+    "discovery" to "Discovery Daft Punk album",
+    "interstella 5555" to "Interstella 5555 anime film",
+    "historia del cine" to "History of cinema",
+    "voyager" to "Voyager program NASA spacecraft"
+)
 private fun encImage(value: String) = URLEncoder.encode(value.trim(), "UTF-8")
 
 private fun imageJson(address: String): JSONObject {
@@ -80,13 +90,14 @@ suspend fun loadCommonsImage(query: String): String = withContext(Dispatchers.IO
     val normalized = query.trim()
     if (normalized.isBlank()) return@withContext ""
     imageCache[normalized.lowercase()]?.let { return@withContext it }
+    val searchTerm = imageAliases[normalized.lowercase()] ?: normalized
     val attempts = listOf<() -> String>(
-        { wikipediaSummaryImage(normalized, "en") },
-        { wikipediaSummaryImage(normalized, "es") },
-        { wikipediaSearchImage(normalized, "en") },
-        { wikipediaSearchImage(normalized, "es") },
-        { commonsImage(normalized) },
-        { openverseImage(normalized) }
+        { wikipediaSummaryImage(searchTerm, "en") },
+        { wikipediaSummaryImage(searchTerm, "es") },
+        { wikipediaSearchImage(searchTerm, "en") },
+        { wikipediaSearchImage(searchTerm, "es") },
+        { commonsImage(searchTerm) },
+        { openverseImage(searchTerm) }
     )
     for (attempt in attempts) {
         val image = try { attempt() } catch (_: Exception) { "" }
