@@ -41,16 +41,16 @@ jobs:
           test -n "$AAPT"
           "$APKSIGNER" verify --verbose "$APK"
           "$AAPT" dump badging "$APK" | tee apk-metadata.txt
-          grep -q "package: name='com.rabbithole.app' versionCode='26' versionName='1.0.26'" apk-metadata.txt
+          grep -q "package: name='com.rabbithole.app' versionCode='5034' versionName='5.0.34'" apk-metadata.txt
           sha256sum "$APK"
 
       - name: Prepare named APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk RabbitHole-1.0.26.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk RabbitHole-5.0.34.apk
 
       - name: Upload verified APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RabbitHole-1.0.26-verified
+          name: RabbitHole-5.0.34-verified
           path: RabbitHole-1.0.26.apk
           if-no-files-found: error
 
@@ -58,12 +58,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="v1.0-26"
+          VERSION="v5.0.34"
           if ! gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$VERSION" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "RabbitHole 1.0.26 (APK verificado)" \
-              --notes "APK compilado desde cero y verificado con ZIP integrity, apksigner y AAPT."
+              --title "RabbitHole 5.0.34" \
+              --notes "Rediseño personalizado; APK verificado con ZIP integrity, apksigner y AAPT."
           fi
           gh release upload "$VERSION" RabbitHole-1.0.26.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
