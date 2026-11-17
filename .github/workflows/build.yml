@@ -30,6 +30,9 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Prepare image optimization
+        run: python3 -m pip install --quiet pillow
+
       - name: Download offline poster artwork
         run: python3 scripts/download_posters.py
 
@@ -52,13 +55,13 @@ jobs:
           sha256sum "$APK"
 
       - name: Prepare named APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk RabbitHole-5.5.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk RabbitHole-5.6.0.apk
 
       - name: Upload verified APK artifact (optional mirror)
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: RabbitHole-5.5.0-verified
+          name: RabbitHole-5.6.0-verified
           path: RabbitHole-5.5.0.apk
           if-no-files-found: error
 
@@ -66,12 +69,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="v5.5.0"
+          VERSION="v5.6.0"
           if ! gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$VERSION" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "RabbitHole 5.5.0" \
-              --notes "Dossiers editoriales inmersivos, relatos ampliados, fotografía contextual y nueva composición tipo afiche. APK verificado con ZIP integrity, apksigner y AAPT."
+              --title "RabbitHole 5.6.0" \
+              --notes "Biblioteca expandida, portada editorial rediseñada, dossiers visuales y cartografía de descubrimientos. APK verificado con ZIP integrity, apksigner y AAPT."
           fi
           gh release upload "$VERSION" RabbitHole-5.5.0.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
