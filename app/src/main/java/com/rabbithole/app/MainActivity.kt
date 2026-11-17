@@ -68,6 +68,21 @@ private val catalog = listOf(
 )
 private val starter = listOf("Nirvana","Universo","Cine de terror","Historia del diseño")
 
+private fun interestMatches(item:Discovery,topic:String):Boolean{
+ val text=(item.title+" "+item.category+" "+item.description+" "+item.connections.joinToString(" ")).lowercase()
+ val terms=when(topic){
+  "Rock alternativo","Grunge"->listOf("nirvana","grunge","rock","seattle","punk","soundgarden")
+  "Música electrónica"->listOf("daft punk","electrónica","house","discovery")
+  "Astronomía"->listOf("astronom","apollo","voyager","espacio","luna")
+  "Ciencia ficción"->listOf("ciencia ficción","espacio","futuro","voyager")
+  "Diseño gráfico","Diseño industrial"->listOf("diseño","bauhaus","tipografía","industrial")
+  "Terror"->listOf("terror","horror","cine")
+  "Documentales"->listOf("documental","historia","apollo")
+  else->listOf(topic.lowercase().substringBefore(" "))
+ }
+ return terms.any{text.contains(it)}
+}
+
 class MainActivity:ComponentActivity(){
  override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState)
   window.statusBarColor=android.graphics.Color.rgb(245,245,243)
@@ -100,7 +115,7 @@ class MainActivity:ComponentActivity(){
    searching=false
   }
  }
- val localMatches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}.sortedByDescending{item->if(interests.any{item.title.contains(it,true)||item.description.contains(it,true)||item.category.contains(it,true)||item.connections.any{c->c.contains(it,true)}})1 else 0}
+ val localMatches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}.sortedByDescending{item->if(interests.any{interestMatches(item,it)})1 else 0}
  val matches=(localMatches+onlineResults).distinctBy{"${it.source}:${it.title.lowercase()}"}
  val searchStatus=when{query.isBlank()->"Biblioteca inicial + fuentes abiertas";searching->"Consultando 10 fuentes gratuitas…";else->"${onlineResults.size} hallazgos externos · ${localMatches.size} locales"}
  MaterialTheme(colorScheme=lightColorScheme(primary=Ink,onPrimary=Color.White,background=Paper,surface=Color.White,onSurface=Ink)){
