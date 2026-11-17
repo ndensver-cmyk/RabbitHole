@@ -12,8 +12,8 @@ android {
         applicationId = "com.rabbithole.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5034
-        versionName = "5.0.34"
+        versionCode = 5100
+        versionName = "5.1.0"
     }
 
     buildTypes {
