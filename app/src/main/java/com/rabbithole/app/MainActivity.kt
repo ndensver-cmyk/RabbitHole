@@ -130,7 +130,7 @@ class MainActivity:ComponentActivity(){
      "Intereses"->ExperienceOnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();tab="Inicio"}
      "Guardados"->ExperienceLibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
      "Recorrido"->ExperienceLibraryScreen("Tu recorrido","Vuelve a los temas que ya exploraste.",history.mapNotNull{t->catalog.find{it.title==t}},saved,{selected=it},{t->saved=if(t in saved)saved-t else saved+t})
-     else->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
+     else->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Intereses"},{tab="Universo"})
     }
    }
    if(selected==null) ExperienceNavigation(tab){tab=it}
