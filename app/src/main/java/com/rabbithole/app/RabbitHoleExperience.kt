@@ -1,4 +1,6 @@
 package com.rabbithole.app
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -26,11 +28,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalContext
 import coil.request.ImageRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -52,32 +57,50 @@ private fun posterFor(item:Discovery)=item.imageUrl
  val pulse by t.animateFloat(.88f,1.13f,infiniteRepeatable(tween(1500),RepeatMode.Reverse),label="pulse")
  Canvas(modifier){val d=size.minDimension;val c=Offset(size.width/2,size.height/2);drawCircle(color.copy(alpha=.25f),d*.47f,c,style=Stroke(1.dp.toPx()));drawCircle(color.copy(alpha=.48f),d*.31f,c,style=Stroke(1.dp.toPx()));drawCircle(color.copy(alpha=.8f),d*.11f*pulse,c);val a=Math.toRadians(angle.toDouble());val p=Offset(c.x+kotlin.math.cos(a).toFloat()*d*.42f,c.y+kotlin.math.sin(a).toFloat()*d*.42f);drawLine(color.copy(alpha=.55f),c,p,1.dp.toPx());drawCircle(color,d*.035f,p)}
 }
+private fun posterAssetName(title:String):String? = when(title.trim().lowercase()){
+ "nirvana"->"poster_nirvana.jpg"
+ "nevermind"->"poster_nevermind.jpg"
+ "in utero"->"poster_inutero.jpg"
+ "seattle"->"poster_seattle.jpg"
+ "grunge"->"poster_grunge.jpg"
+ "pink floyd"->"poster_pink_floyd.jpg"
+ "the dark side of the moon"->"poster_dark_side.jpg"
+ "daft punk"->"poster_daftpunk.jpg"
+ "discovery"->"poster_discovery.jpg"
+ "interstella 5555"->"poster_interstella.jpg"
+ "historia del cine"->"poster_cinema.jpg"
+ "apollo 11"->"poster_apollo11.jpg"
+ "voyager"->"poster_voyager.jpg"
+ "historia del diseño"->"poster_design_history.jpg"
+ else->null
+}
 @Composable private fun Photo(item:Discovery,modifier:Modifier=Modifier){
  val context=LocalContext.current
+ var localPoster by remember(item.title){mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)}
  var image by remember(item.title){mutableStateOf(posterFor(item))}
  var failed by remember(item.title){mutableStateOf(false)}
  var retried by remember(item.title){mutableStateOf(false)}
  LaunchedEffect(item.title){
-  if(image.isBlank())image=loadCommonsImage(item.title)
+  val asset=posterAssetName(item.title)
+  if(asset!=null){
+   localPoster=withContext(Dispatchers.IO){
+    runCatching{context.assets.open("posters/"+asset).use{BitmapFactory.decodeStream(it)?.asImageBitmap()}}.getOrNull()
+   }
+  }
+  if(localPoster==null&&image.isBlank())image=loadCommonsImage(item.title)
  }
  LaunchedEffect(failed){
-  if(failed&&!retried){
+  if(failed&&!retried&&localPoster==null){
    retried=true
-   val alternative=loadCommonsImage(item.title+" "+item.category+" photograph")
+   val alternative=loadCommonsImage(item.title)
    if(alternative.isNotBlank()&&alternative!=image){image=alternative;failed=false}
   }
  }
  Box(modifier.clip(RoundedCornerShape(3.dp)).background(Brush.linearGradient(listOf(Color(0xFF494640),XBlack)))){
-  if(image.isNotBlank()&&!failed){
-   AsyncImage(
-    model=ImageRequest.Builder(context).data(image).crossfade(true).allowHardware(false).build(),
-    contentDescription="Imagen de "+item.title,
-    modifier=Modifier.fillMaxSize(),
-    contentScale=ContentScale.Crop,
-    onError={failed=true}
-   )
-  }else{
-   Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF494640),Color(0xFF201F1C),XBlack)))){
+  when{
+   localPoster!=null->Image(bitmap=localPoster!!,contentDescription="Imagen de "+item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.28f)}))
+   image.isNotBlank()&&!failed->AsyncImage(model=ImageRequest.Builder(context).data(image).crossfade(true).allowHardware(false).build(),contentDescription="Imagen de "+item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,onError={failed=true})
+   else->Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF494640),Color(0xFF201F1C),XBlack)))){
     OrbitMark(Modifier.align(Alignment.Center).fillMaxSize(.62f),Color.White.copy(alpha=.82f))
     Text(item.title.uppercase(),Modifier.align(Alignment.BottomStart).padding(12.dp),color=Color.White.copy(alpha=.82f),fontSize=12.sp,lineHeight=14.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp,maxLines=3)
     Text(if(failed)"IMAGEN NO DISPONIBLE" else "BUSCANDO IMAGEN",Modifier.align(Alignment.TopStart).padding(11.dp),color=Color.White.copy(alpha=.65f),fontSize=7.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
