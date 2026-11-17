@@ -12,8 +12,8 @@ android {
         applicationId = "com.rabbithole.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5300
-        versionName = "5.3.0"
+        versionCode = 5400
+        versionName = "5.4.0"
     }
 
     buildTypes {
@@ -40,6 +40,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("io.coil-kt:coil:2.7.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
