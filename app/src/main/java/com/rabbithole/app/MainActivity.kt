@@ -32,6 +32,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -75,6 +76,10 @@ class MainActivity:ComponentActivity(){
 }
 
 @Composable private fun RabbitHoleApp(){
+ val context=LocalContext.current
+ val prefs=context.getSharedPreferences("rabbithole_profile",0)
+ var onboarded by remember{mutableStateOf(prefs.getBoolean("onboarded",false))}
+ var interests by remember{mutableStateOf(prefs.getStringSet("interests",emptySet())?.toSet()?:emptySet())}
  var query by remember{mutableStateOf("")}
  var tab by remember{mutableStateOf("Inicio")}
  var category by remember{mutableStateOf("Todo")}
@@ -83,6 +88,7 @@ class MainActivity:ComponentActivity(){
  var history by remember{mutableStateOf(listOf<String>())}
  var onlineResults by remember{mutableStateOf(emptyList<Discovery>())}
  var searching by remember{mutableStateOf(false)}
+ if(!onboarded){ OnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();onboarded=true}; return }
  LaunchedEffect(query) {
   if(query.trim().length<2){onlineResults=emptyList();searching=false}
   else {
@@ -92,7 +98,7 @@ class MainActivity:ComponentActivity(){
    searching=false
   }
  }
- val localMatches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}
+ val localMatches=catalog.filter{(category=="Todo"||it.category==category)&&(query.isBlank()||it.title.contains(query,true)||it.description.contains(query,true)||it.connections.any{c->c.contains(query,true)})}.sortedByDescending{item->if(interests.any{item.title.contains(it,true)||item.description.contains(it,true)||item.category.contains(it,true)||item.connections.any{c->c.contains(it,true)}})1 else 0}
  val matches=(localMatches+onlineResults).distinctBy{"${it.source}:${it.title.lowercase()}"}
  val searchStatus=when{query.isBlank()->"Biblioteca inicial + fuentes abiertas";searching->"Consultando 10 fuentes gratuitas…";else->"${onlineResults.size} hallazgos externos · ${localMatches.size} locales"}
  MaterialTheme(colorScheme=lightColorScheme(primary=Ink,onPrimary=Color.White,background=Paper,surface=Color.White,onSurface=Ink)){
@@ -100,12 +106,13 @@ class MainActivity:ComponentActivity(){
    Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=15.dp),verticalAlignment=Alignment.CenterVertically){
     Portal(Modifier.size(34.dp)); Spacer(Modifier.width(10.dp))
     Column { Text("RABBIT HOLE",fontSize=14.sp,fontWeight=FontWeight.Black,letterSpacing=2.sp);Text("A WORLD OF CURIOSITY",fontSize=8.sp,color=Muted,letterSpacing=1.5.sp) }
-    Spacer(Modifier.weight(1f));Text("01 / EXPLORE",fontSize=9.sp,color=Muted,letterSpacing=1.sp)
+    Spacer(Modifier.weight(1f));Text("MIS INTERESES",Modifier.clickable{tab="Intereses"}.padding(5.dp),fontSize=8.sp,color=Muted,letterSpacing=.7.sp)
    }
    AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={fadeIn() togetherWith fadeOut()},label="screen"){page->
     when(page){
      "Inicio"->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
      "Universo"->MapScreen{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)}
+     "Intereses"->OnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();tab="Inicio"}
      "Guardados"->LibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
      "Recorrido"->LibraryScreen("Tu recorrido","Vuelve a los temas que ya exploraste.",history.mapNotNull{t->catalog.find{it.title==t}},saved,{selected=it},{t->saved=if(t in saved)saved-t else saved+t})
      else->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
