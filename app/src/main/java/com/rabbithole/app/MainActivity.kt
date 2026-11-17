@@ -123,11 +123,6 @@ class MainActivity:ComponentActivity(){
  val searchStatus=when{query.isBlank()->"Biblioteca inicial + fuentes abiertas";searching->"Consultando 10 fuentes gratuitas…";else->"${onlineResults.size} hallazgos externos · ${localMatches.size} locales"}
  MaterialTheme(colorScheme=lightColorScheme(primary=Ink,onPrimary=Color.White,background=Paper,surface=Color.White,onSurface=Ink)){
   Column(Modifier.fillMaxSize().background(Paper)){
-   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=15.dp),verticalAlignment=Alignment.CenterVertically){
-    Portal(Modifier.size(34.dp)); Spacer(Modifier.width(10.dp))
-    Column { Text("RABBIT HOLE",fontSize=14.sp,fontWeight=FontWeight.Black,letterSpacing=2.sp);Text("A WORLD OF CURIOSITY",fontSize=8.sp,color=Muted,letterSpacing=1.5.sp) }
-    Spacer(Modifier.weight(1f));Text("MIS INTERESES",Modifier.clickable{tab="Intereses"}.padding(5.dp),fontSize=8.sp,color=Muted,letterSpacing=.7.sp)
-   }
    AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={(fadeIn(tween(260))+slideInVertically(tween(320)){it/9}) togetherWith (fadeOut(tween(180))+slideOutVertically(tween(220)){ -it/12 })},label="screen"){page->
     when(page){
      "Inicio"->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
