@@ -116,13 +116,13 @@ fun ExperienceHome(query:String,onQuery:(String)->Unit,category:String,onCategor
   item{
    Column{
     Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=16.dp),verticalAlignment=Alignment.CenterVertically){OrbitMark(Modifier.size(30.dp),XBlack);Column(Modifier.padding(start=10.dp)){Text("RABBIT HOLE",color=XBlack,fontSize=12.sp,fontWeight=FontWeight.Black,letterSpacing=2.sp);Tag("THE CURIOSITY JOURNAL")};Spacer(Modifier.weight(1f));Text("PERFIL  ↗",Modifier.clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{onProfile()}.padding(12.dp),color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black)}
-    Box(Modifier.fillMaxWidth().height(390.dp).background(XBlack)){
+    Box(Modifier.fillMaxWidth().height(510.dp).background(XBlack)){
      if(lead!=null)Photo(lead,Modifier.fillMaxSize())else OrbitMark(Modifier.align(Alignment.Center).size(270.dp))
      Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color(0x33000000),Color(0xF0000000)))))
      Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(23.dp)){
       Tag("RABBIT HOLE ORIGINALS",Color.White)
       Text(lead?.title?.uppercase() ?: "EL MUNDO\nNO SE ACABA\nEN LO QUE SABES.",color=XWhite,fontSize=40.sp,lineHeight=42.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.8).sp)
-      Text(lead?.description ?: "Cada curiosidad es una puerta. Abre una y descubre hasta dónde llega.",color=Color(0xFFE5E2DC),fontSize=12.sp,lineHeight=18.sp,maxLines=3,modifier=Modifier.padding(top=10.dp).fillMaxWidth(.88f))
+      Text(lead?.let{"${it.type}  /  ${it.category}  /  UNA HISTORIA PARA EXPLORAR"} ?: "Cada curiosidad es una puerta. Abre una y descubre hasta dónde llega.",color=Color(0xFFE5E2DC),fontSize=9.sp,lineHeight=15.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold,maxLines=2,modifier=Modifier.padding(top=13.dp).fillMaxWidth(.88f))
       Row(Modifier.padding(top=17.dp).clip(CircleShape).background(XWhite).clickable{if(lead!=null)onOpen(lead)else onMap()}.padding(horizontal=16.dp,vertical=12.dp)){Text(if(lead!=null)"ENTRAR EN LA HISTORIA  ↗" else "EXPLORAR EL UNIVERSO  ↗",color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black)}
      }
      Text("01  /  RABBIT HOLE",Modifier.align(Alignment.TopStart).padding(20.dp),color=Color.White,fontSize=8.sp,letterSpacing=1.5.sp,fontWeight=FontWeight.Bold)
@@ -140,9 +140,15 @@ fun ExperienceHome(query:String,onQuery:(String)->Unit,category:String,onCategor
    Column(Modifier.padding(top=27.dp)){
     Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.Bottom){Column(Modifier.weight(1f)){Tag("ELIGE UNA DIRECCIÓN");Text("Sigue la curiosidad.",color=XBlack,fontSize=26.sp,fontWeight=FontWeight.Black)};Tag(routes.size.toString()+" RUTAS")}
     androidx.compose.foundation.lazy.LazyRow(contentPadding=PaddingValues(horizontal=20.dp),horizontalArrangement=Arrangement.spacedBy(13.dp),modifier=Modifier.padding(top=13.dp)){
-     items(routes.take(10)){item->Column(Modifier.width(264.dp).clickable{onOpen(item)}){
-      Box(Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(5.dp)).background(XBlack)){Photo(item,Modifier.fillMaxSize());Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xDD000000)))));Column(Modifier.align(Alignment.BottomStart).padding(16.dp)){Tag(item.type,Color.White);Text(item.title,color=XWhite,fontSize=24.sp,lineHeight=27.sp,fontWeight=FontWeight.Black);Text("ABRIR DESCUBRIMIENTO  ↗",color=Color.White,fontSize=8.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=9.dp))}}
-      Text(item.description,color=Color(0xFF45423D),fontSize=12.sp,lineHeight=19.sp,maxLines=6,modifier=Modifier.padding(top=11.dp))
+     items(routes.take(10)){item->Box(Modifier.width(246.dp).height(365.dp).clip(RoundedCornerShape(2.dp)).background(XBlack).clickable{onOpen(item)}){
+      Photo(item,Modifier.fillMaxSize())
+      Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color.Transparent,Color(0xED000000)))))
+      Text(item.type.uppercase(),Modifier.align(Alignment.TopStart).padding(13.dp),color=XWhite,fontSize=8.sp,letterSpacing=1.5.sp,fontWeight=FontWeight.Black)
+      Column(Modifier.align(Alignment.BottomStart).padding(17.dp)){
+       Box(Modifier.width(32.dp).height(2.dp).background(XWhite))
+       Text(item.title.uppercase(),color=XWhite,fontSize=if(item.title.length>17)25.sp else 30.sp,lineHeight=if(item.title.length>17)27.sp else 31.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=10.dp))
+       Text("SEGUIR EL HILO  ↗",color=Color.White,fontSize=8.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=11.dp))
+      }
      }}
     }
    }
