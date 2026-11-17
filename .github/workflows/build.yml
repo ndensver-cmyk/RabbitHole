@@ -41,7 +41,7 @@ jobs:
           test -n "$AAPT"
           "$APKSIGNER" verify --verbose "$APK"
           "$AAPT" dump badging "$APK" | tee apk-metadata.txt
-          grep -q "package: name='com.rabbithole.app' versionCode='25' versionName='1.0.26'" apk-metadata.txt
+          grep -q "package: name='com.rabbithole.app' versionCode='26' versionName='1.0.26'" apk-metadata.txt
           sha256sum "$APK"
 
       - name: Prepare named APK
