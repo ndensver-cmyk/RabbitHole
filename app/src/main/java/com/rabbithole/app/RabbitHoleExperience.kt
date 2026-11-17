@@ -122,6 +122,12 @@ fun ExperienceHome(query:String,onQuery:(String)->Unit,category:String,onCategor
   item{Column(Modifier.padding(horizontal=20.dp).padding(top=30.dp)){Tag("DESCUBRIR SIN DESTINO");Text("No sabes qué buscas.\nY esa es la idea.",color=XBlack,fontSize=29.sp,lineHeight=32.sp,fontWeight=FontWeight.Black);Text("Elige un tema, encuentra una conexión inesperada y deja que la siguiente pregunta aparezca sola.",color=XMuted,fontSize=12.sp,lineHeight=19.sp,modifier=Modifier.padding(top=9.dp));Row(Modifier.fillMaxWidth().padding(top=17.dp).clip(RoundedCornerShape(5.dp)).background(XBlack).clickable{onMap()}.padding(17.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Tag("CARTOGRAFÍA INTERACTIVA",Color.LightGray);Text("Entra al Universo",color=XWhite,fontSize=20.sp,fontWeight=FontWeight.Black)};Text("↗",color=XWhite,fontSize=25.sp)}}}
  }
 }
+@Composable private fun PosterCard(item:Discovery,saved:Boolean,onOpen:()->Unit,onSave:()->Unit,modifier:Modifier,tall:Boolean){
+ Column(modifier.clip(RoundedCornerShape(17.dp)).background(XWhite).clickable{onOpen()}){
+  Box(Modifier.fillMaxWidth().height(if(tall)215.dp else 164.dp)){Photo(item,Modifier.fillMaxSize());Text(item.type,Modifier.align(Alignment.TopStart).padding(9.dp).clip(CircleShape).background(Color(0xAA080808)).padding(horizontal=9.dp,vertical=6.dp),color=XWhite,fontSize=7.sp);Text(if(saved)"♥" else "＋",Modifier.align(Alignment.TopEnd).padding(8.dp).clip(CircleShape).background(Color(0xAA080808)).clickable{onSave()}.padding(horizontal=9.dp,vertical=5.dp),color=XWhite,fontSize=14.sp)}
+  Column(Modifier.padding(11.dp)){Tag(item.source);Text(item.title,color=XBlack,fontSize=15.sp,lineHeight=18.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp),maxLines=2);Text(item.description,color=Color(0xFF625F59),fontSize=10.sp,lineHeight=15.sp,maxLines=4,modifier=Modifier.padding(top=6.dp));Row(Modifier.padding(top=10.dp),verticalAlignment=Alignment.CenterVertically){Text("SEGUIR DESCUBRIENDO",color=XBlack,fontSize=7.sp,fontWeight=FontWeight.Black);Spacer(Modifier.weight(1f));Text("↗",color=XBlack,fontSize=14.sp)}}
+ }
+}
 @Composable
 fun ExperienceMapScreen(onOpen:(Discovery)->Unit){
  var focus by remember{mutableStateOf(catalog.first())}
