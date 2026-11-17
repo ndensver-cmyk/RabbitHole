@@ -26,6 +26,9 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Download offline poster artwork
+        run: python3 scripts/download_posters.py
+
       - name: Build clean debug APK
         run: gradle clean assembleDebug
 
