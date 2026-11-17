@@ -160,63 +160,80 @@ fun ExperienceDetail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Uni
  val uri=LocalUriHandler.current
  var hero by remember(item.title){mutableStateOf(item.imageUrl)}
  var contextImage by remember(item.title){mutableStateOf("")}
- val entrance by rememberInfiniteTransition(label="posterEntrance").animateFloat(.985f,1f,infiniteRepeatable(tween(2200),RepeatMode.Reverse),label="posterBreath")
+ var heroFailed by remember(item.title){mutableStateOf(false)}
+ val entrance by rememberInfiniteTransition(label="posterMotion").animateFloat(1f,1.075f,infiniteRepeatable(tween(11000,easing=LinearEasing),RepeatMode.Reverse),label="posterBreath")
  LaunchedEffect(item.title){
   if(hero.isBlank())hero=loadCommonsImage(item.title)
   if(item.connections.isNotEmpty())contextImage=loadCommonsImage(item.connections.first())
  }
- LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=44.dp)){
+ LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=50.dp)){
   item{
-   Box(Modifier.fillMaxWidth().height(535.dp).background(XBlack)){
-    if(hero.isNotBlank())AsyncImage(model=hero,contentDescription="Imagen editorial de "+item.title,modifier=Modifier.fillMaxSize().scale(entrance),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.28f)}))
-    else OrbitMark(Modifier.align(Alignment.Center).size(250.dp))
-    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x55000000),Color(0x12000000),Color(0xF5000000)))))
+   Box(Modifier.fillMaxWidth().height(590.dp).background(XBlack)){
+    if(hero.isNotBlank()&&!heroFailed){
+     AsyncImage(model=hero,contentDescription="Fotografía principal de "+item.title,modifier=Modifier.fillMaxSize().scale(entrance),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.42f)}),onError={heroFailed=true})
+    }else{
+     Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF55534E),Color(0xFF1D1D1B),XBlack)))){
+      OrbitMark(Modifier.align(Alignment.Center).size(300.dp),Color.White.copy(alpha=.78f))
+      Text(item.title.uppercase(),Modifier.align(Alignment.Center).padding(horizontal=24.dp),color=Color.White.copy(alpha=.13f),fontSize=52.sp,lineHeight=50.sp,fontWeight=FontWeight.Black,letterSpacing=(-2).sp)
+     }
+    }
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x99000000),Color(0x12000000),Color(0x22000000),Color(0xF5000000)))))
+    Box(Modifier.align(Alignment.CenterStart).padding(start=9.dp).width(2.dp).fillMaxHeight(.54f).background(Color.White.copy(alpha=.65f)))
+    Text("R H  /  0 0 1",Modifier.align(Alignment.CenterEnd).padding(end=12.dp).then(Modifier),color=Color.White.copy(alpha=.8f),fontSize=8.sp,letterSpacing=2.sp)
     Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(horizontal=18.dp,vertical=20.dp),verticalAlignment=Alignment.CenterVertically){
-     Text("←  VOLVER",Modifier.clip(CircleShape).background(Color(0x66000000)).clickable{onBack()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp)
+     Text("←  SALIR",Modifier.clip(CircleShape).background(Color(0x77000000)).clickable{onBack()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp)
      Spacer(Modifier.weight(1f))
-     Text(if(saved)"GUARDADO ✓" else "GUARDAR  +",Modifier.clip(CircleShape).background(Color(0x66000000)).clickable{onSave()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=.8.sp)
+     Text("RABBITHOLE  /  ARCHIVO",color=Color.White,fontSize=8.sp,letterSpacing=1.8.sp,fontWeight=FontWeight.Bold)
+     Spacer(Modifier.weight(1f))
+     Text(if(saved)"♥" else "＋",Modifier.clip(CircleShape).background(Color(0x77000000)).clickable{onSave()}.padding(horizontal=13.dp,vertical=8.dp),color=XWhite,fontSize=18.sp)
     }
-    Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start=23.dp,end=23.dp,bottom=27.dp)){
-     Text("RABBITHOLE  /  DOSSIER  ·  "+item.type.uppercase(),color=Color.White,fontSize=9.sp,letterSpacing=1.8.sp,fontWeight=FontWeight.Bold)
-     Text(item.title.uppercase(),color=XWhite,fontSize=46.sp,lineHeight=47.sp,fontWeight=FontWeight.Black,letterSpacing=(-2.2).sp,modifier=Modifier.padding(top=12.dp))
-     Box(Modifier.padding(top=14.dp).width(48.dp).height(3.dp).background(XWhite))
-     Text(item.description.substringBefore(".").plus(".").take(180),color=Color(0xFFE9E6E0),fontSize=14.sp,lineHeight=21.sp,modifier=Modifier.padding(top=14.dp).fillMaxWidth(.92f))
+    Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start=25.dp,end=25.dp,bottom=30.dp)){
+     Text("DOSSIER VISUAL     /     "+item.type.uppercase(),color=Color.White,fontSize=9.sp,letterSpacing=2.sp,fontWeight=FontWeight.Black)
+     Text(item.title.uppercase(),color=XWhite,fontSize=if(item.title.length>18)43.sp else 55.sp,lineHeight=if(item.title.length>18)44.sp else 55.sp,fontWeight=FontWeight.Black,letterSpacing=(-2.8).sp,modifier=Modifier.padding(top=10.dp))
+     Row(Modifier.padding(top=13.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.width(42.dp).height(3.dp).background(XWhite));Text("  UNA HISTORIA PARA EXPLORAR",color=Color.White,fontSize=8.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold)}
+     Text(item.description.substringBefore("\n\n").take(430),color=Color(0xFFF0EEE8),fontSize=14.sp,lineHeight=22.sp,modifier=Modifier.padding(top=13.dp).fillMaxWidth(.96f))
     }
    }
-   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=17.dp),verticalAlignment=Alignment.CenterVertically){
-    Column(Modifier.weight(1f)){Text(item.category.uppercase(),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=1.3.sp);Text("ARCHIVO DE CURIOSIDAD",color=XMuted,fontSize=8.sp,letterSpacing=1.sp,modifier=Modifier.padding(top=4.dp))}
-    Column(horizontalAlignment=Alignment.End){Text("LECTURA EDITORIAL",color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp);Text("01 / "+item.source.uppercase(),color=XMuted,fontSize=8.sp,modifier=Modifier.padding(top=4.dp))}
+   Row(Modifier.fillMaxWidth().background(XBlack).padding(horizontal=23.dp,vertical=16.dp),verticalAlignment=Alignment.CenterVertically){
+    Column(Modifier.weight(1f)){Text("COLECCIÓN",color=Color(0xFFAAA69E),fontSize=8.sp,letterSpacing=1.5.sp);Text(item.category.uppercase(),color=XWhite,fontSize=11.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=4.dp))}
+    Box(Modifier.width(1.dp).height(30.dp).background(Color(0xFF55534E)))
+    Column(Modifier.weight(1f).padding(start=15.dp)){Text("FORMATO",color=Color(0xFFAAA69E),fontSize=8.sp,letterSpacing=1.5.sp);Text("ENSAYO VISUAL",color=XWhite,fontSize=11.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=4.dp))}
+    Box(Modifier.width(1.dp).height(30.dp).background(Color(0xFF55534E)))
+    Column(Modifier.weight(1f).padding(start=15.dp)){Text("ORIGEN",color=Color(0xFFAAA69E),fontSize=8.sp,letterSpacing=1.5.sp);Text(item.source.uppercase().take(15),color=XWhite,fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=4.dp))}
    }
-   Box(Modifier.fillMaxWidth().height(1.dp).padding(horizontal=22.dp).background(XLine))
    Column(Modifier.padding(horizontal=23.dp)){
-    Text("MÁS ALLÁ DEL PRIMER VISTAZO",color=XMuted,fontSize=9.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=25.dp))
-    Text("Una historia que merece detenerse.",color=XBlack,fontSize=29.sp,lineHeight=32.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.1).sp,modifier=Modifier.padding(top=8.dp,bottom=14.dp))
+    Row(Modifier.fillMaxWidth().padding(top=30.dp,bottom=12.dp),verticalAlignment=Alignment.CenterVertically){Text("01",color=XBlack,fontSize=46.sp,lineHeight=46.sp,fontWeight=FontWeight.Black,letterSpacing=(-2).sp);Column(Modifier.padding(start=12.dp)){Text("EL DOSSIER",color=XBlack,fontSize=10.sp,letterSpacing=2.sp,fontWeight=FontWeight.Black);Text("MÁS ALLÁ DE LA PORTADA",color=XMuted,fontSize=8.sp,letterSpacing=1.2.sp,modifier=Modifier.padding(top=4.dp))}}
+    Box(Modifier.fillMaxWidth().height(1.dp).background(XLine))
+    Text("Detente un momento. Mira las conexiones.",color=XBlack,fontSize=29.sp,lineHeight=33.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=20.dp,bottom=19.dp))
     EditorialSections(item)
    }
    if(contextImage.isNotBlank()){
-    Column(Modifier.padding(top=28.dp)){
-     AsyncImage(model=contextImage,contentDescription="Imagen relacionada con "+item.connections.firstOrNull().orEmpty(),modifier=Modifier.fillMaxWidth().height(255.dp),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.28f)}))
-     Text("OTRA VENTANA · "+item.connections.firstOrNull().orEmpty().uppercase(),Modifier.padding(horizontal=23.dp,vertical=9.dp),color=XMuted,fontSize=8.sp,letterSpacing=1.3.sp,fontWeight=FontWeight.Bold)
+    Column(Modifier.padding(top=30.dp)){
+     Box(Modifier.fillMaxWidth().height(310.dp).background(XBlack)){
+      AsyncImage(model=contextImage,contentDescription="Imagen de contexto: "+item.connections.firstOrNull().orEmpty(),modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.38f)}))
+      Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xCC000000)))))
+      Text("OTRA PERSPECTIVA  /  "+item.connections.firstOrNull().orEmpty().uppercase(),Modifier.align(Alignment.BottomStart).padding(20.dp),color=Color.White,fontSize=9.sp,letterSpacing=1.6.sp,fontWeight=FontWeight.Black)
+     }
     }
    }
    Column(Modifier.padding(horizontal=23.dp)){
-    Text("FUENTE Y CONTEXTO",color=XMuted,fontSize=9.sp,letterSpacing=1.6.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=24.dp))
-    Text("Una buena historia no termina en una sola página.",color=XBlack,fontSize=24.sp,lineHeight=27.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=7.dp))
-    Text("Este dossier reúne una introducción para orientarte. Puedes contrastar la información y ampliar los detalles en la fuente original.",color=Color(0xFF55524C),fontSize=13.sp,lineHeight=21.sp,modifier=Modifier.padding(top=9.dp))
-    if(item.url.isNotBlank())Text("ABRIR FUENTE ORIGINAL  ↗",Modifier.padding(top=15.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.url)}}.padding(horizontal=15.dp,vertical=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)
+    Text("FUENTES Y CONTEXTO",color=XMuted,fontSize=9.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=28.dp))
+    Text("Una historia nunca termina en una sola página.",color=XBlack,fontSize=26.sp,lineHeight=29.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=8.dp))
+    Text("Usa este dossier como punto de partida: contrasta los datos, visita las fuentes originales y sigue las conexiones para construir tu propio recorrido.",color=Color(0xFF55524C),fontSize=14.sp,lineHeight=23.sp,modifier=Modifier.padding(top=10.dp))
+    if(item.url.isNotBlank())Text("ABRIR FUENTE ORIGINAL  ↗",Modifier.padding(top=16.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.url)}}.padding(horizontal=15.dp,vertical=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)
     if(item.audioUrl.isNotBlank())Text("ESCUCHAR FRAGMENTO  ↗",Modifier.padding(top=9.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.audioUrl)}}.padding(horizontal=15.dp,vertical=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)
-    Text("SIGUE EL HILO",color=XMuted,fontSize=9.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=34.dp,bottom=8.dp))
-    Text("No te quedes aquí.",color=XBlack,fontSize=31.sp,lineHeight=33.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp)
-    Text("Cada conexión abre otro capítulo.",color=XMuted,fontSize=12.sp,modifier=Modifier.padding(top=5.dp,bottom=13.dp))
+    Text("SIGUE EL HILO",color=XMuted,fontSize=9.sp,letterSpacing=1.8.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=34.dp,bottom=7.dp))
+    Text("La siguiente puerta está aquí.",color=XBlack,fontSize=29.sp,lineHeight=32.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.1).sp)
+    Text("Cada conexión abre un nuevo capítulo.",color=XMuted,fontSize=12.sp,modifier=Modifier.padding(top=6.dp,bottom=16.dp))
    }
   }
   itemsIndexed(item.connections){index,connection->
-   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp).clickable{onConnection(connection)}.padding(vertical=14.dp),verticalAlignment=Alignment.CenterVertically){
-    Text((index+1).toString().padStart(2,'0'),color=XMuted,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.width(36.dp))
-    Column(Modifier.weight(1f)){Text(connection,color=XBlack,fontSize=20.sp,lineHeight=23.sp,fontWeight=FontWeight.Bold);Text("ABRIR ESTA RUTA",color=XMuted,fontSize=8.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp))}
-    Text("↗",color=XBlack,fontSize=22.sp)
+   val linked=Discovery(connection,"CONEXIÓN",item.category,"Una ruta conectada con "+item.title+".",listOf(item.title),"RabbitHole")
+   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=8.dp).clip(RoundedCornerShape(3.dp)).background(Color.White).clickable{onConnection(connection)}.padding(10.dp),verticalAlignment=Alignment.CenterVertically){
+    Box(Modifier.width(30.dp),contentAlignment=Alignment.Center){Text((index+1).toString().padStart(2,'0'),color=XMuted,fontSize=11.sp,fontWeight=FontWeight.Black)}
+    Photo(linked,Modifier.size(88.dp,104.dp))
+    Column(Modifier.weight(1f).padding(start=13.dp)){Text("CAPÍTULO  0${index+1}",color=XMuted,fontSize=8.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold);Text(connection,color=XBlack,fontSize=19.sp,lineHeight=22.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=6.dp));Text("ABRIR DESCUBRIMIENTO  ↗",color=XBlack,fontSize=8.sp,letterSpacing=.8.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=10.dp))}
    }
-   Box(Modifier.fillMaxWidth().padding(horizontal=22.dp).height(1.dp).background(XLine))
   }
  }
 }
