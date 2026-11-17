@@ -52,9 +52,25 @@ private fun posterFor(item:Discovery)=item.imageUrl
 }
 @Composable private fun Photo(item:Discovery,modifier:Modifier=Modifier){
  var image by remember(item.title){mutableStateOf(posterFor(item))}
+ var failed by remember(item.title){mutableStateOf(false)}
+ var retried by remember(item.title){mutableStateOf(false)}
  LaunchedEffect(item.title){if(image.isBlank())image=loadCommonsImage(item.title)}
- Box(modifier.clip(RoundedCornerShape(17.dp)).background(Brush.linearGradient(listOf(Color(0xFF3A3935),XBlack)))){
-  if(image.isNotBlank())AsyncImage(model=image,contentDescription=item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.12f)}))else OrbitMark(Modifier.align(Alignment.Center).fillMaxSize(.65f))
+ LaunchedEffect(failed){
+  if(failed&&!retried){
+   retried=true
+   val alternative=loadCommonsImage(item.title+" photograph")
+   if(alternative.isNotBlank()&&alternative!=image){image=alternative;failed=false}
+  }
+ }
+ Box(modifier.clip(RoundedCornerShape(5.dp)).background(Brush.linearGradient(listOf(Color(0xFF3A3935),XBlack)))){
+  if(image.isNotBlank()&&!failed){
+   AsyncImage(model=image,contentDescription="Imagen de "+item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.20f)}),onError={failed=true})
+  }else{
+   Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF494741),XBlack)))){
+    OrbitMark(Modifier.align(Alignment.Center).fillMaxSize(.62f))
+    Text(item.title.uppercase(),Modifier.align(Alignment.BottomStart).padding(12.dp),color=Color.White.copy(alpha=.72f),fontSize=10.sp,lineHeight=12.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp,maxLines=2)
+   }
+  }
   Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xDD000000)))))
  }
 }
