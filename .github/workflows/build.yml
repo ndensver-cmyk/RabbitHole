@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RabbitHole-5.3.0-verified
-          path: RabbitHole-5.2.0.apk
+          path: RabbitHole-5.3.0.apk
           if-no-files-found: error
 
       - name: Publish verified APK release
@@ -66,5 +66,5 @@ jobs:
               --title "RabbitHole 5.3.0" \
               --notes "Dossiers editoriales inmersivos, relatos ampliados, fotografía contextual y nueva composición tipo afiche. APK verificado con ZIP integrity, apksigner y AAPT."
           fi
-          gh release upload "$VERSION" RabbitHole-5.2.0.apk \
+          gh release upload "$VERSION" RabbitHole-5.3.0.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
