@@ -53,7 +53,7 @@ private val Muted = Color(0xFF777777)
 private val Rule = Color(0xFFE3E3E1)
 
 data class Discovery(val title:String,val type:String,val category:String,val description:String,val connections:List<String>,val source:String="RabbitHole",val url:String="",val imageUrl:String="",val audioUrl:String="")
-private val catalog = listOf(
+internal val catalog = listOf(
  Discovery("Nirvana","ARTISTA","Música","Nirvana nació en Aberdeen, Washington, y se convirtió en una de las bandas más influyentes del rock alternativo de los años noventa. Su mezcla de melodía pop, energía punk y guitarras distorsionadas ayudó a llevar el sonido de Seattle a una audiencia mundial.",listOf("Nevermind","In Utero","Seattle","Grunge","Punk rock")),
  Discovery("Nevermind","ÁLBUM","Música","Publicado en septiembre de 1991, Nevermind llevó a Nirvana desde el circuito independiente hasta el centro de la cultura popular. Su sonido directo, sus contrastes dinámicos y sus canciones memorables marcaron un punto de inflexión para el rock de aquella década.",listOf("Nirvana","Butch Vig","Grunge","MTV Unplugged")),
  Discovery("In Utero","ÁLBUM","Música","Lanzado en 1993, In Utero presentó una faceta más cruda y deliberadamente áspera de Nirvana. El álbum explora contrastes entre ruido y melodía, vulnerabilidad y confrontación, y permite seguir la evolución artística del grupo después del éxito de Nevermind.",listOf("Nirvana","Steve Albini","Alternative rock")),
@@ -210,7 +210,7 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable private fun ExperienceLibraryScreen(title:String,subtitle:String,items:List<Discovery>,saved:Set<String>,onOpen:(Discovery)->Unit,onSave:(String)->Unit){
+@Composable private fun LegacyLibraryScreen(title:String,subtitle:String,items:List<Discovery>,saved:Set<String>,onOpen:(Discovery)->Unit,onSave:(String)->Unit){
  Column(Modifier.fillMaxSize()){
   Column(Modifier.padding(start=22.dp,end=22.dp,top=26.dp,bottom=18.dp)){Text("RABBIT HOLE / LIBRARY",fontSize=9.sp,color=Muted,letterSpacing=1.7.sp);Text(title,fontSize=34.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.4).sp);Text(subtitle,fontSize=12.sp,color=Muted)}
   if(items.isEmpty())Column(Modifier.fillMaxWidth().padding(35.dp),horizontalAlignment=Alignment.CenterHorizontally){Portal(Modifier.size(54.dp));Text("Todavía no hay nada aquí.",Modifier.padding(top=14.dp),fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Explora un tema y guarda los descubrimientos que te interesen.",Modifier.padding(top=5.dp),fontSize=11.sp,color=Muted)}
