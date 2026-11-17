@@ -33,8 +33,8 @@ private fun requestJson(address: String): JSONObject {
     }
 }
 
-private fun hit(title: String, type: String, description: String, source: String, url: String) =
-    Discovery(title.trim(), type, "Todo", description.trim().take(420), emptyList(), source, url)
+private fun hit(title: String, type: String, description: String, source: String, url: String, imageUrl: String = "", audioUrl: String = "") =
+    Discovery(title.trim(), type, "Todo", description.trim().take(900), emptyList(), source, url, imageUrl, audioUrl)
 
 private suspend fun wikipedia(q: String): List<Discovery> = withContext(Dispatchers.IO) {
     val json = requestJson("https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${enc(q)}&gsrlimit=6&gsrnamespace=0&prop=extracts%7Cinfo&exintro=1&explaintext=1&inprop=url&format=json")
@@ -123,7 +123,7 @@ private suspend fun openverse(q: String): List<Discovery> = withContext(Dispatch
         val title = item.optString("title").ifBlank { "Imagen relacionada con $q" }
         val creator = item.optString("creator")
         val license = item.optString("license")
-        hit(title, "IMAGEN CON LICENCIA ABIERTA", listOf(creator, license).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "Revisa la licencia y atribución antes de reutilizar." }, "Openverse", item.optString("foreign_landing_url", item.optString("url")))
+        hit(title, "IMAGEN CON LICENCIA ABIERTA", listOf(creator, license).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "Revisa la licencia y atribución antes de reutilizar." }, "Openverse", item.optString("foreign_landing_url", item.optString("url")), item.optString("url"))
     }
 }
 
@@ -134,7 +134,7 @@ private suspend fun itunes(q: String): List<Discovery> = withContext(Dispatchers
         val item = results.optJSONObject(i) ?: return@mapNotNull null
         val title = item.optString("trackName").ifBlank { item.optString("collectionName") }
         val link = item.optString("trackViewUrl").ifBlank { item.optString("collectionViewUrl") }
-        if (title.isBlank() || link.isBlank()) null else hit(title, item.optString("kind", "CONTENIDO").uppercase(), item.optString("artistName", item.optString("primaryGenreName", "Catálogo Apple")), "Apple iTunes", link)
+        if (title.isBlank() || link.isBlank()) null else hit(title, item.optString("kind", "CONTENIDO").uppercase(), item.optString("artistName", item.optString("primaryGenreName", "Catálogo Apple")), "Apple iTunes", link, item.optString("artworkUrl100").replace("100x100","600x600"), item.optString("previewUrl"))
     }
 }
 
@@ -149,7 +149,7 @@ private suspend fun tvmaze(q: String): List<Discovery> = withContext(Dispatchers
     (0 until jsonArray.length()).mapNotNull { i ->
         val show = jsonArray.optJSONObject(i)?.optJSONObject("show") ?: return@mapNotNull null
         val name = show.optString("name")
-        if (name.isBlank()) null else hit(name, "SERIE / TELEVISIÓN", show.optString("summary").replace(Regex("<[^>]*>"), "").ifBlank { "Serie registrada en TVmaze." }, "TVmaze", show.optString("url"))
+        if (name.isBlank()) null else hit(name, "SERIE / TELEVISIÓN", show.optString("summary").replace(Regex("<[^>]*>"), "").ifBlank { "Serie registrada en TVmaze." }, "TVmaze", show.optString("url"), show.optJSONObject("image")?.optString("original").orEmpty())
     }
 }
 
