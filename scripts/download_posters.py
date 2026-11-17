@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Fetch offline editorial poster images from Wikimedia Commons."""
 import json
+import io
 import os
 import re
 import sys
 import time
 import urllib.parse
 import urllib.request
+
+from PIL import Image
 
 OUT = "app/src/main/assets/posters"
 UA = "RabbitHole/5.5.0 (https://github.com/ndensver-cmyk/RabbitHole)"
@@ -24,6 +27,36 @@ WIKIPEDIA_PAGES = {
     "poster_apollo11": "Apollo 11",
     "poster_voyager": "Voyager program",
     "poster_design_history": "History of graphic design",
+    "poster_foo_fighters": "Foo Fighters",
+    "poster_pearl_jam": "Pearl Jam",
+    "poster_soundgarden": "Soundgarden",
+    "poster_alice_chains": "Alice in Chains",
+    "poster_radiohead": "Radiohead",
+    "poster_ok_computer": "OK Computer",
+    "poster_beatles": "The Beatles",
+    "poster_abbey_road": "Abbey Road",
+    "poster_bowie": "David Bowie",
+    "poster_kraftwerk": "Kraftwerk",
+    "poster_blade_runner": "Blade Runner",
+    "poster_akira": "Akira (1988 film)",
+    "poster_ghost_shell": "Ghost in the Shell",
+    "poster_matrix": "The Matrix",
+    "poster_studio_ghibli": "Studio Ghibli",
+    "poster_shining": "The Shining (film)",
+    "poster_bauhaus": "Bauhaus",
+    "poster_brutalism": "Brutalist architecture",
+    "poster_titanic": "Titanic",
+    "poster_pompeii": "Pompeii",
+    "poster_egypt": "Ancient Egypt",
+    "poster_chernobyl": "Chernobyl disaster",
+    "poster_black_hole": "Black hole",
+    "poster_james_webb": "James Webb Space Telescope",
+    "poster_mars": "Mars",
+    "poster_mars_rover": "Mars rover",
+    "poster_linux": "Linux",
+    "poster_world_wide_web": "World Wide Web",
+    "poster_twin_peaks": "Twin Peaks",
+    "poster_photo_history": "History of photography",
 }
 POSTERS = {
     "poster_nirvana": ["Kurt Cobain Nirvana band", "Nirvana band"],
@@ -40,6 +73,36 @@ POSTERS = {
     "poster_apollo11": ["Apollo 11 moon landing astronauts"],
     "poster_voyager": ["Voyager 1 spacecraft NASA", "Voyager spacecraft NASA"],
     "poster_design_history": ["Bauhaus graphic design poster", "graphic design history poster"],
+    "poster_foo_fighters": ["Foo Fighters band concert"],
+    "poster_pearl_jam": ["Pearl Jam band concert"],
+    "poster_soundgarden": ["Soundgarden band Chris Cornell"],
+    "poster_alice_chains": ["Alice in Chains band"],
+    "poster_radiohead": ["Radiohead band"],
+    "poster_ok_computer": ["Radiohead OK Computer album cover"],
+    "poster_beatles": ["The Beatles band"],
+    "poster_abbey_road": ["Abbey Road Beatles album cover"],
+    "poster_bowie": ["David Bowie portrait Ziggy Stardust"],
+    "poster_kraftwerk": ["Kraftwerk band"],
+    "poster_blade_runner": ["Blade Runner 1982 film still"],
+    "poster_akira": ["Akira 1988 anime film"],
+    "poster_ghost_shell": ["Ghost in the Shell 1995 film"],
+    "poster_matrix": ["The Matrix 1999 film"],
+    "poster_studio_ghibli": ["Studio Ghibli animation"],
+    "poster_shining": ["The Shining 1980 film"],
+    "poster_bauhaus": ["Bauhaus design school building"],
+    "poster_brutalism": ["brutalist architecture concrete building"],
+    "poster_titanic": ["RMS Titanic ship"],
+    "poster_pompeii": ["Pompeii archaeological site"],
+    "poster_egypt": ["Ancient Egypt pyramids"],
+    "poster_chernobyl": ["Chernobyl reactor sarcophagus"],
+    "poster_black_hole": ["Event Horizon Telescope black hole image"],
+    "poster_james_webb": ["James Webb Space Telescope image"],
+    "poster_mars": ["Mars planet NASA"],
+    "poster_mars_rover": ["NASA Perseverance Mars rover"],
+    "poster_linux": ["Linux penguin Tux computer"],
+    "poster_world_wide_web": ["World Wide Web early browser"],
+    "poster_twin_peaks": ["Twin Peaks television series"],
+    "poster_photo_history": ["early photography camera daguerreotype"],
 }
 
 def request_json(url):
@@ -88,8 +151,11 @@ def download(url, path):
         data = response.read()
     if not content_type.startswith("image/") or len(data) < 12000:
         raise ValueError("Not a usable image (%s, %s bytes)" % (content_type, len(data)))
-    with open(path, "wb") as output:
-        output.write(data)
+    # Normalize every poster to a lightweight, consistent JPEG.
+    with Image.open(io.BytesIO(data)) as source:
+        image = source.convert("RGB")
+        image.thumbnail((1200, 1600), Image.Resampling.LANCZOS)
+        image.save(path, "JPEG", quality=84, optimize=True, progressive=True)
 
 def clean(value):
     return re.sub(r"<[^>]+>", "", str(value or "")).strip()
