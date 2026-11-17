@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -47,7 +49,7 @@ private val Paper = Color(0xFFF5F5F3)
 private val Muted = Color(0xFF777777)
 private val Rule = Color(0xFFE3E3E1)
 
-data class Discovery(val title:String,val type:String,val category:String,val description:String,val connections:List<String>,val source:String="RabbitHole",val url:String="")
+data class Discovery(val title:String,val type:String,val category:String,val description:String,val connections:List<String>,val source:String="RabbitHole",val url:String="",val imageUrl:String="",val audioUrl:String="")
 private val catalog = listOf(
  Discovery("Nirvana","ARTISTA","Música","La banda que llevó el sonido de Seattle a una generación entera.",listOf("Nevermind","In Utero","Seattle","Grunge","Punk rock")),
  Discovery("Nevermind","ÁLBUM","Música","El álbum de 1991 que cambió el lugar del rock alternativo en la cultura popular.",listOf("Nirvana","Butch Vig","Grunge","MTV Unplugged")),
@@ -214,14 +216,18 @@ class MainActivity:ComponentActivity(){
 
 @Composable private fun Detail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Unit,onConnection:(String)->Unit){
  val uriHandler=LocalUriHandler.current
+ var heroImage by remember(item.title){mutableStateOf(item.imageUrl)}
+ LaunchedEffect(item.title){if(heroImage.isBlank())heroImage=loadCommonsImage(item.title)}
  Column(Modifier.fillMaxSize().background(Paper)){
   Row(Modifier.fillMaxWidth().padding(20.dp),verticalAlignment=Alignment.CenterVertically){Text("←  VOLVER",Modifier.clickable{onBack()},fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=1.sp);Spacer(Modifier.weight(1f));Text("RABBIT HOLE / DISCOVERY",fontSize=8.sp,color=Muted)}
   Column(Modifier.padding(horizontal=22.dp)){
-   Box(Modifier.fillMaxWidth().height(165.dp).background(Ink,RoundedCornerShape(3.dp)),contentAlignment=Alignment.Center){UniverseGlyph(Modifier.size(130.dp));Text(item.type,Modifier.align(Alignment.BottomStart).padding(14.dp),fontSize=9.sp,color=Color.White,letterSpacing=1.6.sp)}
+   Box(Modifier.fillMaxWidth().height(185.dp).clip(RoundedCornerShape(3.dp)).background(Ink)){if(heroImage.isNotBlank())AsyncImage(model=heroImage,contentDescription="Imagen relacionada con "+item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop);Box(Modifier.fillMaxSize().background(Color(0x55000000)));Text(item.type,Modifier.align(Alignment.BottomStart).padding(14.dp),fontSize=9.sp,color=Color.White,letterSpacing=1.6.sp)}
    Text("YOU FOUND A RABBIT HOLE",Modifier.padding(top=20.dp),fontSize=9.sp,color=Muted,letterSpacing=1.6.sp)
    Text(item.title,Modifier.padding(top=5.dp),fontSize=34.sp,lineHeight=37.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.4).sp)
    Text(item.description,Modifier.padding(top=9.dp),fontSize=13.sp,lineHeight=20.sp,color=Muted)
    Text("FUENTE: ${item.source.uppercase()}",Modifier.padding(top=12.dp),fontSize=9.sp,color=Muted,letterSpacing=1.sp)
+   EditorialSections(item)
+   if(item.audioUrl.isNotBlank())Text("ESCUCHAR FRAGMENTO  ↗",Modifier.padding(top=12.dp).clip(RoundedCornerShape(3.dp)).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{runCatching{uriHandler.openUri(item.audioUrl)}}.padding(horizontal=12.dp,vertical=10.dp),fontSize=9.sp,color=Ink,fontWeight=FontWeight.Bold)
    if(item.url.isNotBlank()) Text("ABRIR FUENTE EXTERNA  ↗",Modifier.padding(top=8.dp).clip(RoundedCornerShape(3.dp)).border(1.dp,Rule,RoundedCornerShape(3.dp)).clickable{runCatching{uriHandler.openUri(item.url)}}.padding(horizontal=12.dp,vertical=9.dp),fontSize=9.sp,color=Ink,fontWeight=FontWeight.Bold,letterSpacing=.7.sp)
    Text(if(saved)"GUARDADO  ✓" else "GUARDAR DESCUBRIMIENTO  +",Modifier.padding(top=16.dp).clip(RoundedCornerShape(3.dp)).background(Ink).clickable{onSave()}.padding(horizontal=14.dp,vertical=10.dp),fontSize=9.sp,color=Color.White,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
    Text(if(item.source=="RabbitHole")"SIGUE EL HILO" else "MÁS RESULTADOS DE ESTA BÚSQUEDA",Modifier.padding(top=24.dp,bottom=10.dp),fontSize=9.sp,color=Muted,letterSpacing=1.7.sp,fontWeight=FontWeight.Bold)
