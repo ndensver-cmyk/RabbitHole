@@ -58,7 +58,7 @@ private fun posterFor(item:Discovery)=item.imageUrl
  var failed by remember(item.title){mutableStateOf(false)}
  var retried by remember(item.title){mutableStateOf(false)}
  LaunchedEffect(item.title){
-  if(image.isBlank())image=loadCommonsImage(item.title+" "+item.type)
+  if(image.isBlank())image=loadCommonsImage(item.title)
  }
  LaunchedEffect(failed){
   if(failed&&!retried){
