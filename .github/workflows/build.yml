@@ -51,7 +51,7 @@ jobs:
           test -n "$AAPT"
           "$APKSIGNER" verify --verbose "$APK"
           "$AAPT" dump badging "$APK" | tee apk-metadata.txt
-          grep -q "package: name='com.rabbithole.app' versionCode='5500' versionName='5.5.0'" apk-metadata.txt
+          grep -q "package: name='com.rabbithole.app' versionCode='5600' versionName='5.6.0'" apk-metadata.txt
           sha256sum "$APK"
 
       - name: Prepare named APK
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RabbitHole-5.6.0-verified
-          path: RabbitHole-5.5.0.apk
+          path: RabbitHole-5.6.0.apk
           if-no-files-found: error
 
       - name: Publish verified APK release
@@ -76,5 +76,5 @@ jobs:
               --title "RabbitHole 5.6.0" \
               --notes "Biblioteca expandida, portada editorial rediseñada, dossiers visuales y cartografía de descubrimientos. APK verificado con ZIP integrity, apksigner y AAPT."
           fi
-          gh release upload "$VERSION" RabbitHole-5.5.0.apk \
+          gh release upload "$VERSION" RabbitHole-5.6.0.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
