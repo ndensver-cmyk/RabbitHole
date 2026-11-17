@@ -133,50 +133,104 @@ fun ExperienceOnboardingScreen(selected:Set<String>,onToggle:(String)->Unit,onCo
 @Composable
 fun ExperienceHome(query:String,onQuery:(String)->Unit,category:String,onCategory:(String)->Unit,results:List<Discovery>,searchStatus:String,saved:Set<String>,onSave:(String)->Unit,onOpen:(Discovery)->Unit,onProfile:()->Unit,onMap:()->Unit){
  val uri=LocalUriHandler.current
- val lead=results.firstOrNull()
- val routes=results.drop(1)
- LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=34.dp)){
+ val lead=results.firstOrNull() ?: catalog.first()
+ val dossierItems=(results.filter{it.description.length>180}.ifEmpty{results}).take(14)
+ val allRows=results.drop(1).chunked(2).take(24)
+ val heroMotion=rememberInfiniteTransition(label="coverMotion")
+ val heroZoom by heroMotion.animateFloat(1f,1.055f,infiniteRepeatable(tween(14000,easing=LinearEasing),RepeatMode.Reverse),label="heroZoom")
+ val categories=listOf("Todo","Música","Cine","Historia","Ciencia","Diseño","Tecnología","Arte")
+ LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=38.dp)){
   item{
-   Column{
-    Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=16.dp),verticalAlignment=Alignment.CenterVertically){OrbitMark(Modifier.size(30.dp),XBlack);Column(Modifier.padding(start=10.dp)){Text("RABBIT HOLE",color=XBlack,fontSize=12.sp,fontWeight=FontWeight.Black,letterSpacing=2.sp);Tag("THE CURIOSITY JOURNAL")};Spacer(Modifier.weight(1f));Text("PERFIL  ↗",Modifier.clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{onProfile()}.padding(12.dp),color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black)}
-    Box(Modifier.fillMaxWidth().height(510.dp).background(XBlack)){
-     if(lead!=null)Photo(lead,Modifier.fillMaxSize())else OrbitMark(Modifier.align(Alignment.Center).size(270.dp))
-     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color(0x33000000),Color(0xF0000000)))))
-     Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(23.dp)){
-      Tag("RABBIT HOLE ORIGINALS",Color.White)
-      Text(lead?.title?.uppercase() ?: "EL MUNDO\nNO SE ACABA\nEN LO QUE SABES.",color=XWhite,fontSize=40.sp,lineHeight=42.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.8).sp)
-      Text(lead?.let{"${it.type}  /  ${it.category}  /  UNA HISTORIA PARA EXPLORAR"} ?: "Cada curiosidad es una puerta. Abre una y descubre hasta dónde llega.",color=Color(0xFFE5E2DC),fontSize=9.sp,lineHeight=15.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold,maxLines=2,modifier=Modifier.padding(top=13.dp).fillMaxWidth(.88f))
-      Row(Modifier.padding(top=17.dp).clip(CircleShape).background(XWhite).clickable{if(lead!=null)onOpen(lead)else onMap()}.padding(horizontal=16.dp,vertical=12.dp)){Text(if(lead!=null)"ENTRAR EN LA HISTORIA  ↗" else "EXPLORAR EL UNIVERSO  ↗",color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black)}
+   Column(Modifier.fillMaxWidth().background(XBlack)){
+    Row(Modifier.fillMaxWidth().padding(horizontal=21.dp,vertical=17.dp),verticalAlignment=Alignment.CenterVertically){
+     OrbitMark(Modifier.size(36.dp))
+     Column(Modifier.padding(start=11.dp)){Text("RABBIT HOLE",color=XWhite,fontSize=13.sp,fontWeight=FontWeight.Black,letterSpacing=2.5.sp);Tag("THE INFINITE CURIOSITY JOURNAL",Color.LightGray)}
+     Spacer(Modifier.weight(1f))
+     Text("PERFIL  ↗",Modifier.clip(CircleShape).border(1.dp,Color.White.copy(alpha=.35f),CircleShape).clickable{onProfile()}.padding(horizontal=13.dp,vertical=10.dp),color=XWhite,fontSize=8.sp,fontWeight=FontWeight.Black)
+    }
+    Box(Modifier.fillMaxWidth().height(480.dp).background(XBlack)){
+     Photo(lead,Modifier.fillMaxSize().scale(heroZoom))
+     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x33000000),Color(0x12000000),Color(0xF5000000)))))
+     Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start=23.dp,end=23.dp,bottom=25.dp)){
+      Row(verticalAlignment=Alignment.CenterVertically){Tag("DOSSIER DESTACADO",Color.White);Spacer(Modifier.width(10.dp));Box(Modifier.width(35.dp).height(1.dp).background(Color.White.copy(alpha=.7f)));Tag("RH / 001",Color.White)}
+      Text(lead.title.uppercase(),color=XWhite,fontSize=if(lead.title.length>17)37.sp else 45.sp,lineHeight=if(lead.title.length>17)39.sp else 46.sp,fontWeight=FontWeight.Black,letterSpacing=(-2.1).sp,modifier=Modifier.padding(top=10.dp))
+      Text(lead.description,color=Color(0xFFE4E1DB),fontSize=12.sp,lineHeight=18.sp,maxLines=3,modifier=Modifier.fillMaxWidth(.94f).padding(top=8.dp))
+      Row(Modifier.padding(top=17.dp),verticalAlignment=Alignment.CenterVertically){
+       Text("ABRIR DOSSIER  ↗",Modifier.clip(CircleShape).background(XWhite).clickable{onOpen(lead)}.padding(horizontal=17.dp,vertical=12.dp),color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp)
+       Spacer(Modifier.width(12.dp))
+       Text(lead.type.uppercase()+"  /  "+lead.category.uppercase(),color=Color.White,fontSize=8.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold)
+      }
      }
-     Text("01  /  RABBIT HOLE",Modifier.align(Alignment.TopStart).padding(20.dp),color=Color.White,fontSize=8.sp,letterSpacing=1.5.sp,fontWeight=FontWeight.Bold)
+     Text("01 — PORTADA",Modifier.align(Alignment.TopStart).padding(19.dp),color=Color.White,fontSize=8.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black)
+     Text("DESLIZA PARA ENTRAR",Modifier.align(Alignment.TopEnd).padding(19.dp),color=Color.White,fontSize=7.sp,letterSpacing=1.2.sp)
     }
    }
   }
-  item{Column(Modifier.padding(horizontal=20.dp)){
-   Row(Modifier.fillMaxWidth().padding(top=25.dp,bottom=12.dp),verticalAlignment=Alignment.Bottom){Column(Modifier.weight(1f)){Tag("UNA PUERTA LLEVA A OTRA");Text("Empieza por aquí.",color=XBlack,fontSize=27.sp,fontWeight=FontWeight.Black)};Text("VER UNIVERSO  ↗",Modifier.clickable{onMap()},color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black)}
-   Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(XWhite).border(1.dp,XLine,RoundedCornerShape(18.dp)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Text("⌕",fontSize=24.sp,color=XBlack);Spacer(Modifier.width(9.dp));BasicTextField(query,onQuery,Modifier.weight(1f),singleLine=true,textStyle=TextStyle(color=XBlack,fontSize=13.sp),keyboardOptions=KeyboardOptions(imeAction=ImeAction.Search),decorationBox={inner->if(query.isEmpty())Text("Busca una persona, obra, lugar o idea…",fontSize=11.sp,color=XMuted);inner()});if(query.isNotEmpty())Text("×",Modifier.clickable{onQuery("")},fontSize=21.sp,color=XMuted)}
-   Row(Modifier.horizontalScroll(rememberScrollState()).padding(top=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){listOf("Todo","Música","Cine","Historia","Ciencia").forEach{v->val active=category==v;Text(v,Modifier.clip(CircleShape).background(if(active)XBlack else XWhite).border(1.dp,if(active)XBlack else XLine,CircleShape).clickable{onCategory(v)}.padding(horizontal=15.dp,vertical=9.dp),color=if(active)XWhite else XBlack,fontSize=9.sp,fontWeight=FontWeight.Bold)}}
-   Text(searchStatus.uppercase(),color=XMuted,fontSize=8.sp,letterSpacing=1.sp,modifier=Modifier.padding(top=11.dp))
-   if(query.trim().length>=2)Row(Modifier.horizontalScroll(rememberScrollState()).padding(top=10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){listOf("DuckDuckGo" to "https://duckduckgo.com/?q=","Google" to "https://www.google.com/search?q=","Bing" to "https://www.bing.com/search?q=","Brave" to "https://search.brave.com/search?q=").forEach{(name,base)->Text(name,Modifier.clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(base+android.net.Uri.encode(query))}}.padding(horizontal=11.dp,vertical=8.dp),color=XBlack,fontSize=9.sp)}}
-  }}
-  if(routes.isNotEmpty())item{
-   Column(Modifier.padding(top=27.dp)){
-    Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.Bottom){Column(Modifier.weight(1f)){Tag("ELIGE UNA DIRECCIÓN");Text("Sigue la curiosidad.",color=XBlack,fontSize=26.sp,fontWeight=FontWeight.Black)};Tag(routes.size.toString()+" RUTAS")}
-    androidx.compose.foundation.lazy.LazyRow(contentPadding=PaddingValues(horizontal=20.dp),horizontalArrangement=Arrangement.spacedBy(13.dp),modifier=Modifier.padding(top=13.dp)){
-     items(routes.take(10)){item->Box(Modifier.width(246.dp).height(365.dp).clip(RoundedCornerShape(2.dp)).background(XBlack).clickable{onOpen(item)}){
+  item{
+   Column(Modifier.padding(horizontal=20.dp).padding(top=24.dp)){
+    Row(verticalAlignment=Alignment.Bottom){
+     Column(Modifier.weight(1f)){Tag("EL PRIMER HILO");Text("¿Qué te da curiosidad?",color=XBlack,fontSize=25.sp,fontWeight=FontWeight.Black,letterSpacing=(-.8).sp)}
+     Tag(results.size.toString()+" EN LA BIBLIOTECA")
+    }
+    Row(Modifier.fillMaxWidth().padding(top=13.dp).clip(RoundedCornerShape(4.dp)).background(XWhite).border(1.dp,XLine,RoundedCornerShape(4.dp)).padding(horizontal=14.dp,vertical=15.dp),verticalAlignment=Alignment.CenterVertically){
+     Text("⌕",fontSize=25.sp,color=XBlack);Spacer(Modifier.width(10.dp))
+     BasicTextField(query,onQuery,Modifier.weight(1f),singleLine=true,textStyle=TextStyle(color=XBlack,fontSize=13.sp),keyboardOptions=KeyboardOptions(imeAction=ImeAction.Search),decorationBox={inner->if(query.isEmpty())Text("Busca una persona, obra, lugar o idea…",fontSize=11.sp,color=XMuted);inner()})
+     if(query.isNotEmpty())Text("×",Modifier.clickable{onQuery("")},fontSize=21.sp,color=XMuted)
+    }
+    Row(Modifier.horizontalScroll(rememberScrollState()).padding(top=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+     categories.forEach{v->val active=category==v;Text(v.uppercase(),Modifier.clip(CircleShape).background(if(active)XBlack else XWhite).border(1.dp,if(active)XBlack else XLine,CircleShape).clickable{onCategory(v)}.padding(horizontal=13.dp,vertical=9.dp),color=if(active)XWhite else XBlack,fontSize=8.sp,fontWeight=FontWeight.Black,letterSpacing=.5.sp)}
+    }
+    Text(searchStatus.uppercase(),color=XMuted,fontSize=8.sp,letterSpacing=1.sp,modifier=Modifier.padding(top=12.dp))
+    if(query.trim().length>=2){
+     Text("BUSCA TAMBIÉN EN",color=XMuted,fontSize=8.sp,letterSpacing=1.4.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=14.dp,bottom=8.dp))
+     Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+      listOf("DuckDuckGo" to "https://duckduckgo.com/?q=","Google" to "https://www.google.com/search?q=","Bing" to "https://www.bing.com/search?q=","Brave" to "https://search.brave.com/search?q=").forEach{(name,base)->Text(name,Modifier.clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(base+android.net.Uri.encode(query))}}.padding(horizontal=12.dp,vertical=9.dp),color=XBlack,fontSize=9.sp)}
+     }
+    }
+   }
+  }
+  item{
+   Column(Modifier.padding(top=30.dp)){
+    Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.Bottom){Column(Modifier.weight(1f)){Tag("ARCHIVO EDITORIAL / 01");Text("Dossiers abiertos.",color=XBlack,fontSize=28.sp,fontWeight=FontWeight.Black,letterSpacing=(-1).sp)};Tag(dossierItems.size.toString()+" HISTORIAS")}
+    Text("No son fichas rápidas. Son puertas de entrada a historias, contextos, obras y conexiones.",Modifier.padding(horizontal=20.dp).padding(top=6.dp),color=XMuted,fontSize=11.sp,lineHeight=17.sp)
+    androidx.compose.foundation.lazy.LazyRow(contentPadding=PaddingValues(horizontal=20.dp),horizontalArrangement=Arrangement.spacedBy(13.dp),modifier=Modifier.padding(top=14.dp)){
+     items(dossierItems){item->Box(Modifier.width(258.dp).height(380.dp).clip(RoundedCornerShape(2.dp)).background(XBlack).clickable{onOpen(item)}){
       Photo(item,Modifier.fillMaxSize())
-      Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color.Transparent,Color(0xED000000)))))
-      Text(item.type.uppercase(),Modifier.align(Alignment.TopStart).padding(13.dp),color=XWhite,fontSize=8.sp,letterSpacing=1.5.sp,fontWeight=FontWeight.Black)
-      Column(Modifier.align(Alignment.BottomStart).padding(17.dp)){
-       Box(Modifier.width(32.dp).height(2.dp).background(XWhite))
-       Text(item.title.uppercase(),color=XWhite,fontSize=if(item.title.length>17)25.sp else 30.sp,lineHeight=if(item.title.length>17)27.sp else 31.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=10.dp))
-       Text("SEGUIR EL HILO  ↗",color=Color.White,fontSize=8.sp,letterSpacing=1.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=11.dp))
+      Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x16000000),Color(0x12000000),Color(0xF0000000)))))
+      Column(Modifier.align(Alignment.TopStart).padding(15.dp)){Tag("RABBITHOLE FILE",Color.White);Tag(item.type,Color.White)}
+      Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(18.dp)){
+       Text(item.category.uppercase()+"  /  "+item.source.uppercase(),color=Color(0xFFD6D3CD),fontSize=7.sp,letterSpacing=1.1.sp,fontWeight=FontWeight.Bold)
+       Text(item.title.uppercase(),color=XWhite,fontSize=29.sp,lineHeight=31.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=7.dp))
+       Text(item.description,color=Color(0xFFE4E1DB),fontSize=10.sp,lineHeight=15.sp,maxLines=4,modifier=Modifier.padding(top=8.dp))
+       Row(Modifier.padding(top=13.dp),verticalAlignment=Alignment.CenterVertically){Text("LEER DOSSIER  ↗",color=XWhite,fontSize=8.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp);Spacer(Modifier.weight(1f));Text("＋",color=XWhite,fontSize=18.sp)}
       }
      }}
     }
    }
   }
-  item{Column(Modifier.padding(horizontal=20.dp).padding(top=30.dp)){Tag("DESCUBRIR SIN DESTINO");Text("No sabes qué buscas.\nY esa es la idea.",color=XBlack,fontSize=29.sp,lineHeight=32.sp,fontWeight=FontWeight.Black);Text("Elige un tema, encuentra una conexión inesperada y deja que la siguiente pregunta aparezca sola.",color=XMuted,fontSize=12.sp,lineHeight=19.sp,modifier=Modifier.padding(top=9.dp));Row(Modifier.fillMaxWidth().padding(top=17.dp).clip(RoundedCornerShape(5.dp)).background(XBlack).clickable{onMap()}.padding(17.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Tag("CARTOGRAFÍA INTERACTIVA",Color.LightGray);Text("Entra al Universo",color=XWhite,fontSize=20.sp,fontWeight=FontWeight.Black)};Text("↗",color=XWhite,fontSize=25.sp)}}}
+  item{
+   Column(Modifier.padding(horizontal=20.dp).padding(top=34.dp)){
+    Tag("CARTOGRAFÍA DE CURIOSIDADES")
+    Text("Un tema nunca viene solo.",color=XBlack,fontSize=27.sp,lineHeight=30.sp,fontWeight=FontWeight.Black,letterSpacing=(-1).sp,modifier=Modifier.padding(top=5.dp))
+    Text("Cada nombre es una entrada. Cada conexión abre otras diez posibilidades.",color=XMuted,fontSize=11.sp,lineHeight=17.sp,modifier=Modifier.padding(top=6.dp))
+    Row(Modifier.fillMaxWidth().padding(top=15.dp).clip(RoundedCornerShape(3.dp)).background(XBlack).clickable{onMap()}.padding(18.dp),verticalAlignment=Alignment.CenterVertically){
+     Column(Modifier.weight(1f)){Tag("MAPA INTERACTIVO",Color.LightGray);Text("Entra al universo.",color=XWhite,fontSize=21.sp,fontWeight=FontWeight.Black);Text("Explora las conexiones entre temas.",color=Color.LightGray,fontSize=10.sp,modifier=Modifier.padding(top=4.dp))}
+     OrbitMark(Modifier.size(66.dp))
+    }
+   }
+  }
+  if(allRows.isNotEmpty()){
+   item{Column(Modifier.padding(horizontal=20.dp).padding(top=32.dp)){Tag("EL ARCHIVO SIGUE CRECIENDO");Text("Sigue cayendo.",color=XBlack,fontSize=28.sp,fontWeight=FontWeight.Black);Text("Más historias para perderse un buen rato.",color=XMuted,fontSize=11.sp,modifier=Modifier.padding(top=4.dp))}}
+   items(allRows){pair->Row(Modifier.fillMaxWidth().padding(horizontal=16.dp).padding(top=12.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){pair.forEach{item->PosterCard(item,item.title in saved,{onOpen(item)},{onSave(item.title)},Modifier.weight(1f),true)};if(pair.size==1)Spacer(Modifier.weight(1f))}}
+  }
+  item{
+   Column(Modifier.fillMaxWidth().background(XBlack).padding(horizontal=22.dp,vertical=28.dp)){
+    Tag("NO HAY UN ÚLTIMO DESCUBRIMIENTO",Color.LightGray)
+    Text("Sigue la madriguera.",color=XWhite,fontSize=31.sp,lineHeight=34.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=7.dp))
+    Text("Cambia de tema, sigue una conexión, abre un dossier y deja que una pregunta te lleve a otra.",color=Color(0xFFC5C2BC),fontSize=12.sp,lineHeight=19.sp,modifier=Modifier.padding(top=8.dp))
+    Text("VOLVER AL UNIVERSO  ↗",Modifier.padding(top=17.dp).clip(CircleShape).background(XWhite).clickable{onMap()}.padding(horizontal=16.dp,vertical=12.dp),color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp)
+   }
+  }
  }
 }
 @Composable private fun PosterCard(item:Discovery,saved:Boolean,onOpen:()->Unit,onSave:()->Unit,modifier:Modifier,tall:Boolean){
