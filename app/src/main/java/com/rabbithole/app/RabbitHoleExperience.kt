@@ -222,25 +222,11 @@ fun ExperienceLibraryScreen(title:String,subtitle:String,items:List<Discovery>,s
 @Composable
 fun ExperienceDetail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Unit,onConnection:(String)->Unit){
  val uri=LocalUriHandler.current
- var hero by remember(item.title){mutableStateOf(item.imageUrl)}
- var contextImage by remember(item.title){mutableStateOf("")}
- var heroFailed by remember(item.title){mutableStateOf(false)}
  val entrance by rememberInfiniteTransition(label="posterMotion").animateFloat(1f,1.075f,infiniteRepeatable(tween(11000,easing=LinearEasing),RepeatMode.Reverse),label="posterBreath")
- LaunchedEffect(item.title){
-  if(hero.isBlank())hero=loadCommonsImage(item.title)
-  if(item.connections.isNotEmpty())contextImage=loadCommonsImage(item.connections.first())
- }
  LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=50.dp)){
   item{
    Box(Modifier.fillMaxWidth().height(590.dp).background(XBlack)){
-    if(hero.isNotBlank()&&!heroFailed){
-     AsyncImage(model=hero,contentDescription="Fotografía principal de "+item.title,modifier=Modifier.fillMaxSize().scale(entrance),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.42f)}),onError={heroFailed=true})
-    }else{
-     Box(Modifier.fillMaxSize().background(Brush.radialGradient(listOf(Color(0xFF55534E),Color(0xFF1D1D1B),XBlack)))){
-      OrbitMark(Modifier.align(Alignment.Center).size(300.dp),Color.White.copy(alpha=.78f))
-      Text(item.title.uppercase(),Modifier.align(Alignment.Center).padding(horizontal=24.dp),color=Color.White.copy(alpha=.13f),fontSize=52.sp,lineHeight=50.sp,fontWeight=FontWeight.Black,letterSpacing=(-2).sp)
-     }
-    }
+    Photo(item,Modifier.fillMaxSize().scale(entrance))
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x99000000),Color(0x12000000),Color(0x22000000),Color(0xF5000000)))))
     Box(Modifier.align(Alignment.CenterStart).padding(start=9.dp).width(2.dp).fillMaxHeight(.54f).background(Color.White.copy(alpha=.65f)))
     Text("R H  /  0 0 1",Modifier.align(Alignment.CenterEnd).padding(end=12.dp).then(Modifier),color=Color.White.copy(alpha=.8f),fontSize=8.sp,letterSpacing=2.sp)
@@ -271,12 +257,14 @@ fun ExperienceDetail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Uni
     Text("Detente un momento. Mira las conexiones.",color=XBlack,fontSize=29.sp,lineHeight=33.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp,modifier=Modifier.padding(top=20.dp,bottom=19.dp))
     EditorialSections(item)
    }
-   if(contextImage.isNotBlank()){
+   if(item.connections.isNotEmpty()){
+    val contextTitle=item.connections.first()
+    val contextItem=Discovery(contextTitle,"CONEXIÓN",item.category,"Una ruta visual conectada con "+item.title+".",listOf(item.title),"RabbitHole")
     Column(Modifier.padding(top=30.dp)){
      Box(Modifier.fillMaxWidth().height(310.dp).background(XBlack)){
-      AsyncImage(model=contextImage,contentDescription="Imagen de contexto: "+item.connections.firstOrNull().orEmpty(),modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.38f)}))
+      Photo(contextItem,Modifier.fillMaxSize())
       Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent,Color(0xCC000000)))))
-      Text("OTRA PERSPECTIVA  /  "+item.connections.firstOrNull().orEmpty().uppercase(),Modifier.align(Alignment.BottomStart).padding(20.dp),color=Color.White,fontSize=9.sp,letterSpacing=1.6.sp,fontWeight=FontWeight.Black)
+      Text("OTRA PERSPECTIVA  /  "+contextTitle.uppercase(),Modifier.align(Alignment.BottomStart).padding(20.dp),color=Color.White,fontSize=9.sp,letterSpacing=1.6.sp,fontWeight=FontWeight.Black)
      }
     }
    }
