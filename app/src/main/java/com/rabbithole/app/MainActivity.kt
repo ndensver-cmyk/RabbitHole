@@ -7,6 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -105,7 +108,7 @@ class MainActivity:ComponentActivity(){
  var history by remember{mutableStateOf(listOf<String>())}
  var onlineResults by remember{mutableStateOf(emptyList<Discovery>())}
  var searching by remember{mutableStateOf(false)}
- if(!onboarded){ OnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();onboarded=true}; return }
+ if(!onboarded){ ExperienceOnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();onboarded=true}; return }
  LaunchedEffect(query) {
   if(query.trim().length<2){onlineResults=emptyList();searching=false}
   else {
@@ -125,19 +128,19 @@ class MainActivity:ComponentActivity(){
     Column { Text("RABBIT HOLE",fontSize=14.sp,fontWeight=FontWeight.Black,letterSpacing=2.sp);Text("A WORLD OF CURIOSITY",fontSize=8.sp,color=Muted,letterSpacing=1.5.sp) }
     Spacer(Modifier.weight(1f));Text("MIS INTERESES",Modifier.clickable{tab="Intereses"}.padding(5.dp),fontSize=8.sp,color=Muted,letterSpacing=.7.sp)
    }
-   AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={fadeIn() togetherWith fadeOut()},label="screen"){page->
+   AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={(fadeIn(tween(260))+slideInVertically(tween(320)){it/9}) togetherWith (fadeOut(tween(180))+slideOutVertically(tween(220)){ -it/12 })},label="screen"){page->
     when(page){
-     "Inicio"->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
-     "Universo"->MapScreen{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)}
-     "Intereses"->OnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();tab="Inicio"}
-     "Guardados"->LibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
-     "Recorrido"->LibraryScreen("Tu recorrido","Vuelve a los temas que ya exploraste.",history.mapNotNull{t->catalog.find{it.title==t}},saved,{selected=it},{t->saved=if(t in saved)saved-t else saved+t})
-     else->Home(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
+     "Inicio"->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
+     "Universo"->ExperienceMapScreen{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)}
+     "Intereses"->ExperienceOnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();tab="Inicio"}
+     "Guardados"->ExperienceLibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
+     "Recorrido"->ExperienceLibraryScreen("Tu recorrido","Vuelve a los temas que ya exploraste.",history.mapNotNull{t->catalog.find{it.title==t}},saved,{selected=it},{t->saved=if(t in saved)saved-t else saved+t})
+     else->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{selected=it},{tab="Universo"})
     }
    }
-   if(selected==null) Navigation(tab){tab=it}
+   if(selected==null) ExperienceNavigation(tab){tab=it}
   }
-  selected?.let{item->Detail(item,item.title in saved,{selected=null},{saved=if(item.title in saved)saved-item.title else saved+item.title}){connection->
+  selected?.let{item->ExperienceDetail(item,item.title in saved,{selected=null},{saved=if(item.title in saved)saved-item.title else saved+item.title}){connection->
    selected=catalog.find{it.title.equals(connection,true)}?:onlineResults.find{it.title.equals(connection,true)}?:Discovery(connection,"NUEVA RUTA","Todo","Una conexión para continuar tu exploración.",listOf("Contexto","Referencias","Ideas relacionadas"))
    history=(listOf(connection)+history).distinct().take(40)
   }}
@@ -212,7 +215,7 @@ class MainActivity:ComponentActivity(){
  }
 }
 
-@Composable private fun LibraryScreen(title:String,subtitle:String,items:List<Discovery>,saved:Set<String>,onOpen:(Discovery)->Unit,onSave:(String)->Unit){
+@Composable private fun ExperienceLibraryScreen(title:String,subtitle:String,items:List<Discovery>,saved:Set<String>,onOpen:(Discovery)->Unit,onSave:(String)->Unit){
  Column(Modifier.fillMaxSize()){
   Column(Modifier.padding(start=22.dp,end=22.dp,top=26.dp,bottom=18.dp)){Text("RABBIT HOLE / LIBRARY",fontSize=9.sp,color=Muted,letterSpacing=1.7.sp);Text(title,fontSize=34.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.4).sp);Text(subtitle,fontSize=12.sp,color=Muted)}
   if(items.isEmpty())Column(Modifier.fillMaxWidth().padding(35.dp),horizontalAlignment=Alignment.CenterHorizontally){Portal(Modifier.size(54.dp));Text("Todavía no hay nada aquí.",Modifier.padding(top=14.dp),fontSize=15.sp,fontWeight=FontWeight.Bold);Text("Explora un tema y guarda los descubrimientos que te interesen.",Modifier.padding(top=5.dp),fontSize=11.sp,color=Muted)}
