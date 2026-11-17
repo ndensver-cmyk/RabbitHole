@@ -125,7 +125,7 @@ class MainActivity:ComponentActivity(){
   Column(Modifier.fillMaxSize().background(Paper)){
    AnimatedContent(if(selected!=null)"Detalle" else tab,transitionSpec={(fadeIn(tween(260))+slideInVertically(tween(320)){it/9}) togetherWith (fadeOut(tween(180))+slideOutVertically(tween(220)){ -it/12 })},label="screen"){page->
     when(page){
-     "Inicio"->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Universo"})
+     "Inicio"->ExperienceHome(query,{query=it},category,{category=it},matches,searchStatus,saved,{t->saved=if(t in saved)saved-t else saved+t},{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)},{tab="Intereses"},{tab="Universo"})
      "Universo"->ExperienceMapScreen{item->selected=item;history=(listOf(item.title)+history).distinct().take(40)}
      "Intereses"->ExperienceOnboardingScreen(interests,{topic->interests=if(topic in interests)interests-topic else interests+topic}){prefs.edit().putBoolean("onboarded",true).putStringSet("interests",interests).apply();tab="Inicio"}
      "Guardados"->ExperienceLibraryScreen("Tu colección","Los descubrimientos que quieres conservar.",catalog.filter{it.title in saved},saved,{selected=it},{t->saved=saved-t})
