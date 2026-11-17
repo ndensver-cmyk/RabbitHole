@@ -5,6 +5,10 @@ on:
     branches: [ main, 'redesign/**' ]
   workflow_dispatch:
 
+concurrency:
+  group: rabbithole-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
