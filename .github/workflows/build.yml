@@ -65,5 +65,5 @@ jobs:
               --title "RabbitHole 5.0.34" \
               --notes "Rediseño personalizado; APK verificado con ZIP integrity, apksigner y AAPT."
           fi
-          gh release upload "$VERSION" RabbitHole-1.0.26.apk \
+          gh release upload "$VERSION" RabbitHole-5.0.34.apk \
             --repo "$GITHUB_REPOSITORY" --clobber
