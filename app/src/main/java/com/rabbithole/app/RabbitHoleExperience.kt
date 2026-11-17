@@ -157,12 +157,67 @@ fun ExperienceLibraryScreen(title:String,subtitle:String,items:List<Discovery>,s
 }
 @Composable
 fun ExperienceDetail(item:Discovery,saved:Boolean,onBack:()->Unit,onSave:()->Unit,onConnection:(String)->Unit){
- val uri=LocalUriHandler.current;var expanded by remember(item.title){mutableStateOf(false)};var hero by remember(item.title){mutableStateOf(posterFor(item))};LaunchedEffect(item.title){if(hero.isBlank())hero=loadCommonsImage(item.title)}
- LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=30.dp)){
-  item{Box(Modifier.fillMaxWidth().height(330.dp).background(XBlack)){if(hero.isNotBlank())AsyncImage(model=hero,contentDescription=item.title,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.18f)}))else OrbitMark(Modifier.align(Alignment.Center).size(220.dp));Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x22000000),Color(0xEE000000)))));Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(18.dp),verticalAlignment=Alignment.CenterVertically){Text("←  VOLVER",Modifier.clip(CircleShape).background(Color(0x55000000)).clickable{onBack()}.padding(horizontal=13.dp,vertical=10.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Tag("RABBIT HOLE / STORY",XWhite)};Column(Modifier.align(Alignment.BottomStart).padding(21.dp)){Tag(item.source+"  ·  "+item.type,Color.LightGray);Text(item.title,color=XWhite,fontSize=39.sp,lineHeight=41.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.7).sp,modifier=Modifier.padding(top=7.dp));Text(item.category.uppercase(),color=Color.LightGray,fontSize=9.sp,letterSpacing=1.5.sp,modifier=Modifier.padding(top=7.dp))}}
-   Column(Modifier.padding(horizontal=19.dp)){Row(Modifier.fillMaxWidth().padding(top=17.dp),verticalAlignment=Alignment.CenterVertically){Text(if(saved)"EN TU COLECCIÓN ✓"else"GUARDAR EN TU COLECCIÓN  +",Modifier.clip(CircleShape).background(XBlack).clickable{onSave()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=8.sp,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));Tag("LECTURA · 3 MIN")};Tag("LA HISTORIA DETRÁS DEL HALLAZGO");Text(item.title,color=XBlack,fontSize=27.sp,lineHeight=30.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=7.dp));Text(item.description.ifBlank{"Una puerta de entrada para explorar este tema y sus conexiones."},color=Color(0xFF393833),fontSize=15.sp,lineHeight=24.sp,modifier=Modifier.padding(top=10.dp));if(item.description.length>300){AnimatedVisibility(expanded,enter=fadeIn()+scaleIn(),exit=fadeOut()){Text("Este resumen procede de "+item.source+". Abre la referencia original para consultar el contexto completo y profundizar en sus detalles.",color=Color(0xFF55524C),fontSize=13.sp,lineHeight=21.sp,modifier=Modifier.padding(top=12.dp))};Text(if(expanded)"MOSTRAR MENOS"else"SEGUIR LEYENDO",Modifier.clickable{expanded=!expanded}.padding(top=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)};if(item.url.isNotBlank())Text("CONSULTAR FUENTE ORIGINAL  ↗",Modifier.padding(top=16.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.url)}}.padding(horizontal=14.dp,vertical=11.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Bold);if(item.audioUrl.isNotBlank())Text("ESCUCHAR FRAGMENTO  ↗",Modifier.padding(top=8.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.audioUrl)}}.padding(horizontal=14.dp,vertical=11.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Bold);EditorialSections(item);Text("SIGUE EL HILO",color=XMuted,fontSize=9.sp,letterSpacing=1.5.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=28.dp,bottom=10.dp))}
+ val uri=LocalUriHandler.current
+ var hero by remember(item.title){mutableStateOf(item.imageUrl)}
+ var contextImage by remember(item.title){mutableStateOf("")}
+ val entrance by rememberInfiniteTransition(label="posterEntrance").animateFloat(.985f,1f,infiniteRepeatable(tween(2200),RepeatMode.Reverse),label="posterBreath")
+ LaunchedEffect(item.title){
+  if(hero.isBlank())hero=loadCommonsImage(item.title)
+  if(item.connections.isNotEmpty())contextImage=loadCommonsImage(item.connections.first())
+ }
+ LazyColumn(Modifier.fillMaxSize().background(XPaper),contentPadding=PaddingValues(bottom=44.dp)){
+  item{
+   Box(Modifier.fillMaxWidth().height(535.dp).background(XBlack)){
+    if(hero.isNotBlank())AsyncImage(model=hero,contentDescription="Imagen editorial de "+item.title,modifier=Modifier.fillMaxSize().scale(entrance),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.28f)}))
+    else OrbitMark(Modifier.align(Alignment.Center).size(250.dp))
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x55000000),Color(0x12000000),Color(0xF5000000)))))
+    Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(horizontal=18.dp,vertical=20.dp),verticalAlignment=Alignment.CenterVertically){
+     Text("←  VOLVER",Modifier.clip(CircleShape).background(Color(0x66000000)).clickable{onBack()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=1.sp)
+     Spacer(Modifier.weight(1f))
+     Text(if(saved)"GUARDADO ✓" else "GUARDAR  +",Modifier.clip(CircleShape).background(Color(0x66000000)).clickable{onSave()}.padding(horizontal=14.dp,vertical=11.dp),color=XWhite,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=.8.sp)
+    }
+    Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start=23.dp,end=23.dp,bottom=27.dp)){
+     Text("RABBITHOLE  /  DOSSIER  ·  "+item.type.uppercase(),color=Color.White,fontSize=9.sp,letterSpacing=1.8.sp,fontWeight=FontWeight.Bold)
+     Text(item.title.uppercase(),color=XWhite,fontSize=46.sp,lineHeight=47.sp,fontWeight=FontWeight.Black,letterSpacing=(-2.2).sp,modifier=Modifier.padding(top=12.dp))
+     Box(Modifier.padding(top=14.dp).width(48.dp).height(3.dp).background(XWhite))
+     Text(item.description.substringBefore(".").plus(".").take(180),color=Color(0xFFE9E6E0),fontSize=14.sp,lineHeight=21.sp,modifier=Modifier.padding(top=14.dp).fillMaxWidth(.92f))
+    }
+   }
+   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp,vertical=17.dp),verticalAlignment=Alignment.CenterVertically){
+    Column(Modifier.weight(1f)){Text(item.category.uppercase(),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black,letterSpacing=1.3.sp);Text("ARCHIVO DE CURIOSIDAD",color=XMuted,fontSize=8.sp,letterSpacing=1.sp,modifier=Modifier.padding(top=4.dp))}
+    Column(horizontalAlignment=Alignment.End){Text("LECTURA EDITORIAL",color=XBlack,fontSize=8.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp);Text("01 / "+item.source.uppercase(),color=XMuted,fontSize=8.sp,modifier=Modifier.padding(top=4.dp))}
+   }
+   Box(Modifier.fillMaxWidth().height(1.dp).padding(horizontal=22.dp).background(XLine))
+   Column(Modifier.padding(horizontal=23.dp)){
+    Text("MÁS ALLÁ DEL PRIMER VISTAZO",color=XMuted,fontSize=9.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=25.dp))
+    Text("Una historia que merece detenerse.",color=XBlack,fontSize=29.sp,lineHeight=32.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.1).sp,modifier=Modifier.padding(top=8.dp,bottom=14.dp))
+    EditorialSections(item)
+   }
+   if(contextImage.isNotBlank()){
+    Column(Modifier.padding(top=28.dp)){
+     AsyncImage(model=contextImage,contentDescription="Imagen relacionada con "+item.connections.firstOrNull().orEmpty(),modifier=Modifier.fillMaxWidth().height(255.dp),contentScale=ContentScale.Crop,colorFilter=ColorFilter.colorMatrix(ColorMatrix().apply{setToSaturation(.28f)}))
+     Text("OTRA VENTANA · "+item.connections.firstOrNull().orEmpty().uppercase(),Modifier.padding(horizontal=23.dp,vertical=9.dp),color=XMuted,fontSize=8.sp,letterSpacing=1.3.sp,fontWeight=FontWeight.Bold)
+    }
+   }
+   Column(Modifier.padding(horizontal=23.dp)){
+    Text("FUENTE Y CONTEXTO",color=XMuted,fontSize=9.sp,letterSpacing=1.6.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=24.dp))
+    Text("Una buena historia no termina en una sola página.",color=XBlack,fontSize=24.sp,lineHeight=27.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=7.dp))
+    Text("Este dossier reúne una introducción para orientarte. Puedes contrastar la información y ampliar los detalles en la fuente original.",color=Color(0xFF55524C),fontSize=13.sp,lineHeight=21.sp,modifier=Modifier.padding(top=9.dp))
+    if(item.url.isNotBlank())Text("ABRIR FUENTE ORIGINAL  ↗",Modifier.padding(top=15.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.url)}}.padding(horizontal=15.dp,vertical=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)
+    if(item.audioUrl.isNotBlank())Text("ESCUCHAR FRAGMENTO  ↗",Modifier.padding(top=9.dp).clip(CircleShape).border(1.dp,XLine,CircleShape).clickable{runCatching{uri.openUri(item.audioUrl)}}.padding(horizontal=15.dp,vertical=12.dp),color=XBlack,fontSize=9.sp,fontWeight=FontWeight.Black)
+    Text("SIGUE EL HILO",color=XMuted,fontSize=9.sp,letterSpacing=1.7.sp,fontWeight=FontWeight.Black,modifier=Modifier.padding(top=34.dp,bottom=8.dp))
+    Text("No te quedes aquí.",color=XBlack,fontSize=31.sp,lineHeight=33.sp,fontWeight=FontWeight.Black,letterSpacing=(-1.2).sp)
+    Text("Cada conexión abre otro capítulo.",color=XMuted,fontSize=12.sp,modifier=Modifier.padding(top=5.dp,bottom=13.dp))
+   }
   }
-  items(item.connections){connection->Row(Modifier.fillMaxWidth().padding(horizontal=19.dp,vertical=4.dp).clip(RoundedCornerShape(15.dp)).background(XWhite).clickable{onConnection(connection)}.padding(14.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(37.dp).clip(CircleShape).background(XBlack),contentAlignment=Alignment.Center){Text("↗",color=XWhite,fontSize=17.sp)};Column(Modifier.weight(1f).padding(start=12.dp)){Text(connection,color=XBlack,fontSize=13.sp,fontWeight=FontWeight.Bold);Text("Una nueva ruta para continuar explorando",color=XMuted,fontSize=10.sp,modifier=Modifier.padding(top=3.dp))};Text("→",color=XBlack,fontSize=18.sp)}}
+  itemsIndexed(item.connections){index,connection->
+   Row(Modifier.fillMaxWidth().padding(horizontal=22.dp).clickable{onConnection(connection)}.padding(vertical=14.dp),verticalAlignment=Alignment.CenterVertically){
+    Text((index+1).toString().padStart(2,'0'),color=XMuted,fontSize=11.sp,fontWeight=FontWeight.Bold,modifier=Modifier.width(36.dp))
+    Column(Modifier.weight(1f)){Text(connection,color=XBlack,fontSize=20.sp,lineHeight=23.sp,fontWeight=FontWeight.Bold);Text("ABRIR ESTA RUTA",color=XMuted,fontSize=8.sp,letterSpacing=1.2.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=5.dp))}
+    Text("↗",color=XBlack,fontSize=22.sp)
+   }
+   Box(Modifier.fillMaxWidth().padding(horizontal=22.dp).height(1.dp).background(XLine))
+  }
  }
 }
 @Composable
